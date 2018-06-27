@@ -11,3 +11,4 @@ function sql()
 	mysql_query("SET NAMES utf8",$db_link);
 	mysql_select_db("vhost118066");
 }
+?>
