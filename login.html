@@ -1,0 +1,300 @@
+<html lang="zh-cn">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta id="viewport" name="viewport"
+          content="width=device-width,minimum-scale=1,maximum-scale=1,initial-scale=1,user-scalable=no">
+    <title>手機登入頁</title>
+    <style type="text/css">
+        body, html {
+			width:100%;
+            height: 100%;
+        }
+
+        #go, #onekey {
+            text-align: center;
+        }
+
+        body {
+            font-size: 16px;
+            background: #FF6666; /*背景*/
+        }
+
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            text-decoration: none;
+        }
+
+        input::-webkit-input-placeholder {
+            color: #aaa;
+        }
+
+        .login {
+            margin: 0 auto;
+            padding-top: 30px;
+        }
+
+        input:focus
+        {
+            outline: none;
+            border: white 1px solid;
+        }
+
+        .inputstyle
+        {
+            width: 290px;
+            height: 44px;
+            color: #000;
+            border: none;
+            background: 0 0;
+            padding-left: 15px;
+            font-size: 16px;
+            -webkit-appearance: none;
+        }
+
+        .logo {
+            height: 100px;
+            width: 244px;
+            margin: 0 auto 20px;
+            background-size: 244px 100px;
+        }
+
+        #web_login {
+            margin: 0 auto;
+        }
+
+        #web_login {
+            width: 290px;
+        }
+
+        #g_list {
+            background: #fff;
+            height: 89px;
+        }
+
+        #g_u {
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        #go, #onekey {
+            width: 290px;
+            height: 44px;
+            line-height: 44px;
+            background: #146fdf;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 16px;
+            margin-top: 15px;
+            display: block;
+        }
+
+        #go.weak, #onekey.weak {
+            height: 42px;
+            border: 1px solid #9abbe3;
+            color: #146fdf;
+        }
+
+        #onekey {
+            background: #146fdf;
+            display: none;
+        }
+
+        #go.weak, #onekey.weak {
+            background-color: #e7e7e7;
+        }
+
+        .logo
+        {
+            position: relative;
+            top: 40px;
+            font-size:50px;
+            font-family:'標楷體';
+            text-align:center;
+            color:white;
+        }
+    </style>
+    <script src="admin/js/jquery-1.9.1.min.js"></script>
+</head>
+<body>
+<div id="logo" class="logo">一起購</div>
+
+<div id="to_login_page">
+    <div id="content" class="content">
+        <div id="login" class="login">
+            <div id="web_login" style="display: block;">
+                <ul id="g_list">
+                    <li id="g_u">
+                        <input type="text" id="login_mail" class="inputstyle" placeholder="信箱" />
+                    </li>
+                    <li id="g_p">
+                        <input type="password"  id="login_password" class="inputstyle" placeholder="密碼" />
+                    </li>
+                </ul>
+
+                <div id="go" class="login_btn">登 入</div>
+                <div id="onekey" class=" weak reg" style="display: block;"> 註 冊
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="to_reg_page" style="display: none;">
+    <div id="content" class="content">
+        <div id="login" class="login">
+            <div id="web_login" style="display: block;">
+                <ul id="g_list">
+                    <li id="g_u">
+                        <input type="text" id="reg_mail" class="inputstyle" placeholder="信箱">
+                    </li>
+                    <li id="g_p">
+                        <input type="password" id="reg_password" class="inputstyle" placeholder="密碼">
+                    </li>
+                </ul>
+
+                <div id="go" class="reg_btn">註 冊</div>
+                <div id="onekey" class=" weak go_back" style="display: block;"> 取 消
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+var imei,regid;
+function getIMEI(i , r)
+{
+    imei = i;
+    regid = r;
+}
+
+$(".reg").click(function()
+{
+    $("#to_login_page").fadeOut('2000').hide();
+    $("#to_reg_page").fadeIn('2000').show();
+});
+
+$(".go_back").click(function()
+{
+    $("#to_login_page").fadeIn('2000').show();
+    $("#to_reg_page").fadeOut('2000').hide();
+});
+
+$(".reg_btn").click(function()
+{
+	var reg_mail = $("#reg_mail").val();
+    var email_reg = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
+	var reg_password = $("#reg_password").val();
+	if(reg_mail != "" && reg_password != "")
+	{
+        if(!email_reg.test(reg_mail))
+        {
+            window.javatojs.showInfoFromJs('請輸入正確的email格式');
+        }
+        else
+        {
+            $.ajax
+            ({
+                url:"ajax.php", //接收頁
+                type:"POST", //POST傳輸
+                data:{type:"mobile_reg", reg_mail:reg_mail, reg_password:reg_password,imei:imei,regid:regid}, // key/value
+                dataType:"text", //回傳形態
+                success:function(i) //成功就....
+                {
+                    if(i != "資料有誤，請重新檢查")
+                    {
+                        location.href=i;
+                    }
+                    else
+                    {
+                        window.javatojs.showInfoFromJs(i);
+                    }
+                },
+                error:function()//失敗就...
+                {
+                    //alert("ajax失敗");
+                }
+            });
+        }
+	}
+	else
+	{
+        window.javatojs.showInfoFromJs("請輸入完整註冊資訊");
+	}
+});
+
+$(".login_btn").click(function()
+{
+    var login_mail = $("#login_mail").val();
+    var email_reg = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
+    var login_password = $("#login_password").val();
+    if(login_mail != "" && login_password != "")
+    {
+        if(!email_reg.test(login_mail))
+        {
+            window.javatojs.showInfoFromJs('請輸入正確的email格式');
+        }
+        else
+        {
+            $.ajax
+            ({
+                url:"ajax.php", //接收頁
+                type:"POST", //POST傳輸
+                data:{type:"mobile_login", login_mail:login_mail, login_password:login_password,imei:imei,regid:regid}, // key/value
+                dataType:"text", //回傳形態
+                success:function(i) //成功就....
+                {
+                    if(i != "資料有誤，請重新檢查")
+                    {
+                        location.href=i;
+                    }
+                    else
+                    {
+                        window.javatojs.showInfoFromJs(i);
+                    }
+                },
+                error:function()//失敗就...
+                {
+                }
+            });
+        }
+    }
+    else
+    {
+        window.javatojs.showInfoFromJs('請輸入完整登入資訊');
+    }
+});
+
+$("#reg_mail").blur(function()
+{
+    var user_input = $(this).val();
+    if(user_input)
+    {
+        $.ajax
+        ({
+            url:"ajax.php", //接收頁
+            type:"POST", //POST傳輸
+            data:{type:"check_is_reg", account:user_input}, // key/value
+            dataType:"text", //回傳形態
+            success:function(i) //成功就....
+            {
+                if(i == 1)
+                {
+                    $("#reg_mail").val('');
+                    window.javatojs.showInfoFromJs('此帳號已有人註冊過');
+                }
+            },
+            error:function()//失敗就...
+            {
+            }
+        });
+    }
+});
+
+</script>
+
+</body>
+</html>

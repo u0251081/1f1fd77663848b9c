@@ -1,0 +1,124 @@
+ .supplier-img img
+          {
+            position:absolute;
+            border-radius: 50%;
+            top:135px;
+            left:10%;
+            border-style: solid;
+            border-width: 5px;
+            border-color:white;
+            width:40%; 
+            height:130px;
+          }
+            @media (max-width: 1200px) 
+          {
+      
+            .supplier-img img
+          {
+            position:absolute;
+            border-radius: 50%;
+            top:162px;
+            left:15%;
+            border-style: solid;
+            border-width: 5px;
+            border-color:white;
+             width:35%; 
+            height:100px;
+          }
+          }
+          @media (max-width: 767px)
+          {
+
+              .supplier-img img
+          {
+            position:absolute;
+            border-radius: 50%;
+            top:110px;
+            left:10%;
+            border-style: solid;
+            border-width: 5px;
+            border-color:white;
+            width:30%; 
+            height:160px;
+          }
+          }
+          @media (max-width: 480px) 
+          {
+      
+            .supplier-img img
+          {
+            position:absolute;
+            border-radius: 50%;
+            top:135px;
+            left:15%;
+            border-style: solid;
+            border-width: 5px;
+            border-color:white;
+            width:28%; 
+            height:130px;
+          }
+          }
+          @media (max-width: 380px) 
+          {
+      
+            .supplier-img img
+          {
+            position:absolute;
+            border-radius: 50%;
+            top:150px;
+            left:15%;
+            border-style: solid;
+            border-width: 5px;
+            border-color:white;
+            width:30%; 
+            height:115px;
+          }
+          }
+          @media (max-width: 285px) 
+          {
+      
+            .supplier-img img
+          {
+            position:absolute;
+            border-radius: 50%;
+            top:160px;
+            left:15%;
+            border-style: solid;
+            border-width: 5px;
+            border-color:white;
+            width:30%; 
+            height:100px;
+          }
+          }
+          @media (max-width: 230px) 
+          {
+      
+            .supplier-img img
+          {
+            position:absolute;
+            border-radius: 50%;
+            top:160px;
+            left:15%;
+            border-style: solid;
+            border-width: 5px;
+            border-color:white;
+            width:30%; 
+            height:100px;
+          }
+          }
+           @media (max-width: 175px) 
+          {
+      
+            .supplier-img img
+          {
+            position:absolute;
+            border-radius: 50%;
+            top:160px;
+            left:15%;
+            border-style: solid;
+            border-width: 5px;
+            border-color:white;
+            width:30%; 
+            height:100px;
+          }
+          }
