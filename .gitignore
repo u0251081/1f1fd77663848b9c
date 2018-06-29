@@ -1,2 +1,4 @@
-# ignore some ide temporary
+﻿# ignore some ide temporary
 .idea/
+# ignore windows file list
+gitFileList.txt
