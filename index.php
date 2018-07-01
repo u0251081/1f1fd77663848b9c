@@ -648,7 +648,7 @@
       <div class="modal-content">
         <div class="modal-body">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4>登入或註冊</h4>
+          <h4>登入</h4>
           <form class="aa-login-form">
             <label for="">帳號<span>*</span></label>
             <input type="text" id="account" placeholder="帳號">

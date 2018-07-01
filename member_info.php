@@ -1,3 +1,18 @@
+<?php
+$member_id = $_SESSION['front_id'];
+if(@$_SESSION["member_no"] != "")
+{
+    $sql = "SELECT a.*, b.m_name as parent_name FROM member as a";
+    $sql .= " left join member as b on a.parent_no = b.member_no WHERE a.id='$member_id'";
+}
+else if($_SESSION["fb_id"] != "")
+{
+    $sql = "SELECT * FROM fb WHERE fb_id='".$_SESSION["fb_id"]."'";
+}
+$res = mysql_query($sql);
+$row = mysql_fetch_array($res);
+$parent_name = is_null($row['parent_name'])? '':$row['parent_name']."\" disabled \"";
+?>
 <style>
     @media (max-width: 768px)
     {
@@ -24,23 +39,7 @@
 </section>
 <!-- / 網站位置導覽列 -->
 
-<?php
-$member_id = $_SESSION['front_id'];
-if(@$_SESSION["member_no"] != "")
-{
-    $sql = "SELECT a.*, b.m_name as parent_name FROM member as a";
-    $sql .= " left join member as b on a.parent_no = b.member_no WHERE a.id='$member_id'";
-}
-else if($_SESSION["fb_id"] != "")
-{
-    $sql = "SELECT * FROM fb WHERE fb_id='".$_SESSION["fb_id"]."'";
-}
 
-$res = mysql_query($sql);
-$row = mysql_fetch_array($res);
-
-$parent_name = is_null($row['parent_name'])? '':$row['parent_name']."\" disabled \"";
-?>
 
 <div style="margin-top: 5%;">
     <div class="container">
