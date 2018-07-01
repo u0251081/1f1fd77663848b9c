@@ -16,7 +16,7 @@ if(isset($_SESSION["member_no"])) {
 $cart_pid = $_POST['cart_pid']; //格式：1,2,3,
 $cart_qty = $_POST['cart_qty']; //格式：1,2,3,
 $cart_price = $_POST['cart_price']; //格式：1,2,3,
-$p_name_ary = substr($_POST['p_name_ary'],0,-1); //從購物車購買
+$p_name_ary = substr($_POST['p_name_ary'],0); //從購物車購買
 //-------------------------------//
 
 //----------單筆資料--------------//
@@ -41,418 +41,206 @@ $order_id = time(); //訂單編號產生
 
 //----------判斷有無分享資料-----//
 @$share_manager_no = $_SESSION['share_manager_no']; //導購處理->行銷經理
-@$share_vip_id = $_SESSION['share_vip_id']; //導購處裡->vip分享
-if(@$_POST['fb_no'] == "")
-{
-    @$fb_no = 0;
-
+$share_vip_id = isset($_SESSION['share_vip_id'])? $_SESSION['share_vip_id']:null; //導購處裡->vip分享
+if(!empty($_POST['fb_no'])) {
+    $fb_no = $_POST['fb_no'];
+} else {
+    $fb_no = 0;
 }
-else
+if(!empty($_POST['manager_id']))
 {
-    @$fb_no=$_POST['fb_no'];
+    $manager_id = $_POST['manager_id']; //代表收到行銷經理分享
+} else {
+    $manager_id = $share_manager_no; //代表收到行銷經理分享
 }
-if($_POST['manager_id'] != "")
-{
-    @$manager_id = $_POST['manager_id']; //代表收到行銷經理分享
-}
-else
-{
-    @$manager_id = $share_manager_no; //代表收到行銷經理分享
-}
-
-if($_POST['vip_id'] != "")
-{
-    @$vip_id = $_POST['vip_id']; //代表收到VIP會員再次分享
-}
-else
-{
-    @$vip_id = $share_vip_id; //代表收到VIP會員再次分享
+if (!empty($_POST['vip_id'])) {
+    $vip_id = $_POST['vip_id']; //代表收到VIP會員再次分享
+} else {
+    $vip_id = $share_vip_id; //代表收到VIP會員再次分享
 }
 
 //---------------------//
-
-if(!empty($p_id) && !empty($pay_qty))
-{
-    //如果只有行銷經理的值代表行銷經理分享
-    if($manager_id != "" && $vip_id == '' && $manager_id != $_SESSION['manager_no'])
-    {
-        $sql = "";
-        $sql .= "INSERT INTO consumer_order SET";
-        $sql .= " order_no='$order_id', m_id='$member_no',fb_no='$fb_no',";
-        $sql .= " pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',";
-        $sql .= " o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
-        mysql_query($sql);
-        $insert_id = mysql_insert_id();
-        if($insert_id != "")
-        {
-            $sql2 = "INSERT INTO consumer_order2 SET order1_id='$insert_id', p_id='$p_id', p_name='$p_name', p_web_price='$web_price', qty='$pay_qty'";
-            mysql_query($sql2);
-            if(mysql_affected_rows() > 0)
-            {
-                $sql3 = "SELECT * FROM share WHERE manager_id='$manager_id' AND member_id='$member_no' AND p_id='$p_id'";
-                $res3 = mysql_query($sql3);
-                $row3 = mysql_fetch_array($res3);
-                if($row3['id'] == "" && $row3['is_effective'] == "")
-                {
-                    $sql4 = "INSERT INTO share SET manager_id='$manager_id', member_id='$member_no', p_id='$p_id', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql4);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$member_no,$pay_qty,$paymentchose);
-                }
-                else if($row3['id'] != "" && $row3['is_effective'] == 0)
-                {
-                    $share_id = $row3['id'];
-                    $sql5 = "UPDATE share SET order2_id='$insert_id' WHERE id='".$row3['id']."'";
-                    mysql_query($sql5);
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$member_no,$pay_qty,$paymentchose);
-
-                }
-                else
-                {
-                    $sql6 = "INSERT INTO share SET manager_id='$manager_id', member_id='$member_no', p_id='$p_id', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql6);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$member_no,$pay_qty,$paymentchose);
-                }
-            }
-        }
-    }
-    else if($manager_id != "" && $vip_id != '')
-    {
-        //判斷是否行銷經理及vip會員再次分享的值皆有，如果兩者皆有代表為會員再次分享
-        $sql = "INSERT INTO consumer_order SET order_no='$order_id', m_id='$member_no',fb_no='$fb_no', pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',
-    o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
-        mysql_query($sql);
-        $insert_id = mysql_insert_id();
-        if($insert_id != "")
-        {
-            $sql2 = "INSERT INTO consumer_order2 SET order1_id='$insert_id', p_id='$p_id', p_name='$p_name', p_web_price='$web_price', qty='$pay_qty'";
-            mysql_query($sql2);
-            if(mysql_affected_rows() > 0)
-            {
-                $sql3 = "SELECT * FROM share WHERE manager_id='$manager_id' AND member_id='$member_no' AND vip_id='$vip_id' AND p_id='$p_id'";
-                $res3 = mysql_query($sql3);
-                $row3 = mysql_fetch_array($res3);
-                if($row3['id'] == "" && $row3['is_effective'] == "")
-                {
-                    $sql4 = "INSERT INTO share SET manager_id='$manager_id', member_id='$member_no', vip_id='$vip_id', p_id='$p_id', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql4);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$member_no,$pay_qty,$paymentchose);
-                }
-                else if($row3['id'] != "" && $row3['is_effective'] == 0)
-                {
-                    $share_id = $row3['id'];
-                    $sql5 = "UPDATE share SET order2_id='$insert_id' WHERE id='".$row3['id']."'";
-                    mysql_query($sql5);
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$member_no,$pay_qty,$paymentchose);
-                }
-                else
-                {
-                    $sql6 = "INSERT INTO share SET manager_id='$manager_id', member_id='$member_no', vip_id='$vip_id', p_id='$p_id', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql6);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$member_no,$pay_qty,$paymentchose);
-                }
-            }
-        }
-    }
-    else if($manager_id != "" && $vip_id == '' && $manager_id == $_SESSION['manager_no'])
-    {
-        $sql = "INSERT INTO consumer_order SET order_no='$order_id', m_id='$member_no',fb_no='$fb_no', pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',
-    o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
-        mysql_query($sql);
-        $insert_id = mysql_insert_id();
-        if($insert_id != "")
-        {
-            $sql2 = "INSERT INTO consumer_order2 SET order1_id='$insert_id', p_id='$p_id', p_name='$p_name', p_web_price='$web_price', qty='$pay_qty'";
-            mysql_query($sql2);
-            if(mysql_affected_rows() > 0)
-            {
-                $sql3 = "SELECT * FROM share WHERE manager_id='$manager_id' AND member_id='$manager_id' AND p_id='$p_id'";
-                $res3 = mysql_query($sql3);
-                $row3 = mysql_fetch_array($res3);
-                if($row3['id'] == "" && $row3['is_effective'] == "")
-                {
-                    $sql4 = "INSERT INTO share SET manager_id='$manager_id', member_id='$manager_id', p_id='$p_id', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql4);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$manager_id,$pay_qty,$paymentchose);
-                }
-                else if($row3['id'] != "" && $row3['is_effective'] == 0)
-                {
-                    $share_id = $row3['id'];
-                    $sql5 = "UPDATE share SET order2_id='$insert_id' WHERE id='".$row3['id']."'";
-                    mysql_query($sql5);
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$manager_id,$pay_qty,$paymentchose);
-
-                }
-                else
-                {
-                    $sql6 = "INSERT INTO share SET manager_id='$manager_id', member_id='$manager_id', p_id='$p_id', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql6);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$manager_id,$pay_qty,$paymentchose);
-                }
-            }
-        }
-    }
-    else
-    {
-        //單筆商品購買無分享
-        $sql = "INSERT INTO consumer_order SET order_no='$order_id', m_id='$member_no',fb_no='$fb_no', pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',
-    o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
-        mysql_query($sql);
-        $insert_id = mysql_insert_id();
-        if($insert_id != "")
-        {
-            $sql2 = "INSERT INTO consumer_order2 SET order1_id='$insert_id', p_id='$p_id', p_name='$p_name', p_web_price='$web_price', qty='$pay_qty'";
-            mysql_query($sql2);
-            if(mysql_affected_rows() > 0)
-            {
-                $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                mysql_query($addressee_set);
-                create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,'',$p_id,$member_no,$pay_qty,$paymentchose);
-            }
-        }
-    }
+$order_data = array(
+    'order_id' => $order_id,
+    'manager_id' => $manager_id,
+    'member_no' => $member_no,
+    'pay_time' => $pay_time,
+    'vip_id' => $vip_id,
+    'fb_no' => $fb_no,
+    'TotalAmount' => $TotalAmount,
+    'paymentchose' => $paymentchose,
+    'cart_info' => array(
+        'cart_pid' => $cart_pid,
+        'p_name_ary' => $p_name_ary,
+        'cart_price' => $cart_price,
+        'cart_qty' => $cart_qty
+    ),
+    'receiver_info' => array(
+        'send_addressee_name' => $send_addressee_name,
+        'send_address' => $send_address,
+        'send_cellphone' => $send_cellphone,
+        'addressee_data' => $addressee_date
+    )
+);
+// step1 insert order into consumer_order
+function insert_into_consumer_order($order_data) {
+    $order_id = $order_data['order_id'];
+    $member_no = $order_data['member_no'];
+    $fb_no = $order_data['fb_no'];
+    $paymentchose = $order_data['paymentchose'];
+    $TotalAmount = $order_data['TotalAmount'];
+    $sql = "";
+    $sql .= "INSERT INTO consumer_order SET";
+    $sql .= " order_no='$order_id', m_id='$member_no',fb_no='$fb_no',";
+    $sql .= " pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',";
+    $sql .= " o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
+    mysql_query($sql);
+    $insert_id = mysql_insert_id();
+    return $insert_id;
 }
-else
-{
+// step2 insert order detail into consumer_order2
+function insert_into_consumer_order2($order_data) {
+    $insert_id = $order_data['insert_id'];
+    $cart_pid = $order_data['cart_info']['cart_pid'];
+    $p_name_ary = $order_data['cart_info']['p_name_ary'];
+    $cart_price = $order_data['cart_info']['cart_price'];
+    $cart_qty = $order_data['cart_info']['cart_qty'];
     $cart_pid2 = explode(',',$cart_pid); //商品id的陣列
     $p_name_ary2 = explode(',',$p_name_ary); //商品名稱的陣列
     $cart_price2 = explode(',',$cart_price); //商品金額的陣列
     $cart_qty2 = explode(',',$cart_qty); //商品數量的陣列
-    //echo $cart_pid.' / '.$cart_qty.' / '.$cart_price.' / '.$p_name_ary;
-    //print_r($cart_pid2).' / '.print_r($cart_qty2).' / '.print_r($cart_price2).' / '.print_r($p_name_ary2);
-
-    if($manager_id != "" && $vip_id == '' && $manager_id != $_SESSION['manager_no'])
-    {
-        //多筆商品行銷經理分享給VIP會員購買
-        $sql = "INSERT INTO consumer_order SET order_no='$order_id', m_id='$member_no',fb_no='$fb_no', pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',
-    o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
-        mysql_query($sql);
-        $insert_id = mysql_insert_id();
-        if($insert_id != "")
-        {
-            for($i=0; $i<count($cart_pid2); $i++)
-            {
-                $sql2 = "INSERT INTO consumer_order2 SET order1_id='$insert_id', p_id='$cart_pid2[$i]', p_name='$p_name_ary2[$i]', p_web_price='$cart_price2[$i]', qty='$cart_qty2[$i]'";
-                mysql_query($sql2);
-            }
-
-            if(mysql_affected_rows() > 0)
-            {
-                $sql3 = "SELECT * FROM share WHERE manager_id='$manager_id' AND member_id='$member_no' AND p_id='$cart_pid'";
-                $res3 = mysql_query($sql3);
-                $row3 = mysql_fetch_array($res3);
-                if($row3['id'] == "" && $row3['is_effective'] == "")
-                {
-                    $sql4 = "INSERT INTO share SET manager_id='$manager_id', member_id='$member_no', p_id='$cart_pid', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql4);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$member_no,$share_id,$paymentchose);
-                }
-                else if($row3['id'] != "" && $row3['is_effective'] == 0)
-                {
-                    $share_id = $row3['id'];
-                    $sql5 = "UPDATE share SET order2_id='$insert_id' WHERE id='".$row3['id']."'";
-                    mysql_query($sql5);
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$member_no,$share_id,$paymentchose);
-                }
-                else
-                {
-                    $sql6 = "INSERT INTO share SET manager_id='$manager_id', member_id='$member_no', p_id='$cart_pid', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql6);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$member_no,$share_id,$paymentchose);
-                }
-            }
+    if (is_array($cart_pid2)) {
+        foreach ($cart_pid2 as $k => $v ) {
+            $sql2 = "";
+            $sql2 .= "INSERT INTO consumer_order2 SET";
+            $sql2 .= "   order1_id = '$insert_id', p_id = '$cart_pid2[$k]', p_name = '$p_name_ary2[$k]',";
+            $sql2 .= " p_web_price = '$cart_price2[$k]',  qty = '$cart_qty2[$k]'";
+            mysql_query($sql2);
         }
+        $rst = (mysql_affected_rows() > 0)? true:false;
+        return $rst;
     }
-    else if($manager_id != "" && $vip_id != '')
-    {
-        //多筆商品VIP會員再次轉發行銷經理的url給朋友購買
-        $sql = "INSERT INTO consumer_order SET order_no='$order_id', m_id='$member_no',fb_no='$fb_no', pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',
-    o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
-        mysql_query($sql);
-        $insert_id = mysql_insert_id();
-        if($insert_id != "")
-        {
-            for($i=0; $i<count($cart_pid2); $i++)
-            {
-                $sql2 = "INSERT INTO consumer_order2 SET order1_id='$insert_id', p_id='$cart_pid2[$i]', p_name='$p_name_ary2[$i]', p_web_price='$cart_price2[$i]', qty='$cart_qty2[$i]'";
-                mysql_query($sql2);
-            }
-
-            if(mysql_affected_rows() > 0)
-            {
-                $sql3 = "SELECT * FROM share WHERE manager_id='$manager_id' AND member_id='$member_no' AND p_id='$cart_pid'";
-                $res3 = mysql_query($sql3);
-                $row3 = mysql_fetch_array($res3);
-                if($row3['id'] == "" && $row3['is_effective'] == "")
-                {
-                    $sql4 = "INSERT INTO share SET manager_id='$manager_id', member_id='$member_no', vip_id='$vip_id', p_id='$cart_pid', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql4);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$member_no,$share_id,$paymentchose);
-                }
-                else if($row3['id'] != "" && $row3['is_effective'] == 0)
-                {
-                    $share_id = $row3['id'];
-                    $sql5 = "UPDATE share SET order2_id='$insert_id' WHERE id='".$row3['id']."'";
-                    mysql_query($sql5);
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$member_no,$share_id,$paymentchose);
-                }
-                else
-                {
-                    $sql6 = "INSERT INTO share SET manager_id='$manager_id', member_id='$member_no', vip_id='$vip_id', p_id='$cart_pid', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql6);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$member_no,$share_id,$paymentchose);
-                }
-            }
-        }
+    return false;
+}
+// step3 insert receiver information into addressee_set
+function insert_into_addressee_set($order_data) {
+    $order_id = $order_data['order_id'];
+    $member_no = $order_data['member_no'];
+    $send_addressee_name = $order_data['receiver_info']['send_addressee_name'];
+    $send_address = $order_data['receiver_info']['send_address'];
+    $send_cellphone = $order_data['receiver_info']['send_cellphone'];
+    $addressee_date = $order_data['receiver_info']['addressee_data'];
+    $sql = "";
+    $sql .= "INSERT INTO addressee_set SET";
+    $sql .= " order_no = '$order_id', `name` = '$send_addressee_name', address = '$send_address',";
+    $sql .= " cellphone = '$send_cellphone', addressee_date = '$addressee_date', m_id = '$member_no'";
+    mysql_query($sql);
+}
+// step4 does it been share with manager or vip
+function process_with_share( $order_data, $status = FALSE) {
+    $insert_id = $order_data['insert_id'];
+    $manager_id = $order_data['manager_id'];
+    $member_no = $order_data['member_no'];
+    $vip_id = $order_data['vip_id'];
+    $cart_pid = $order_data['cart_info']['cart_pid'];
+    $sql3 = "SELECT * FROM share WHERE manager_id='$manager_id' AND p_id='$cart_pid'";
+    $sql4 = "INSERT INTO share SET manager_id='$manager_id', p_id='$cart_pid', is_effective='0', order2_id='$insert_id'";
+    switch ($status) {
+        case 1:
+            $sql3 .= " and vip_id='$vip_id'";
+            $sql4  = ", vip_id = '$vip_id'";
+        case 2:
+            $sql3 .= " and member_id='$member_no'";
+            $sql4 .= ", member_id = '$member_no'";
+            break;
+        case 3:
+            $sql3 .= " and member_id='$manager_id'";
+            $sql4 .= ", member_id = '$manager_id'";
+            break;
+        default:
+            return null;
+            break;
     }
-    else if($manager_id != "" && $vip_id == '' && $manager_id == $_SESSION['manager_no'])
-    {
-        //多筆商品行銷經理分享給VIP會員購買
-        $sql = "INSERT INTO consumer_order SET order_no='$order_id', m_id='$member_no',fb_no='$fb_no', pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',
-    o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
-        mysql_query($sql);
-        $insert_id = mysql_insert_id();
-        if($insert_id != "")
-        {
-            for($i=0; $i<count($cart_pid2); $i++)
-            {
-                $sql2 = "INSERT INTO consumer_order2 SET order1_id='$insert_id', p_id='$cart_pid2[$i]', p_name='$p_name_ary2[$i]', p_web_price='$cart_price2[$i]', qty='$cart_qty2[$i]'";
-                mysql_query($sql2);
-            }
-
-            if(mysql_affected_rows() > 0)
-            {
-                $sql3 = "SELECT * FROM share WHERE manager_id='$manager_id' AND member_id='$manager_id' AND p_id='$cart_pid'";
-                $res3 = mysql_query($sql3);
-                $row3 = mysql_fetch_array($res3);
-                if($row3['id'] == "" && $row3['is_effective'] == "")
-                {
-                    $sql4 = "INSERT INTO share SET manager_id='$manager_id', member_id='$manager_id', p_id='$cart_pid', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql4);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$manager_id,$share_id,$paymentchose);
-                }
-                else if($row3['id'] != "" && $row3['is_effective'] == 0)
-                {
-                    $share_id = $row3['id'];
-                    $sql5 = "UPDATE share SET order2_id='$insert_id' WHERE id='".$row3['id']."'";
-                    mysql_query($sql5);
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$manager_id,$share_id,$paymentchose);
-                }
-                else
-                {
-                    $sql6 = "INSERT INTO share SET manager_id='$manager_id', member_id='$manager_id', p_id='$cart_pid', is_effective='0', order2_id='$insert_id'";
-                    mysql_query($sql6);
-                    $share_id = mysql_insert_id();
-
-                    $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                    mysql_query($addressee_set);
-
-                    create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$manager_id,$share_id,$paymentchose);
-                }
-            }
-        }
+    $res3 = mysql_query($sql3);
+    $row3 = mysql_fetch_array($res3);
+    if ($row3['id'] != "" && $row3['is_effective'] == 0) {
+        $sql5 = "UPDATE share SET order2_id='$insert_id' WHERE id='".$row3['id']."'";
+        mysql_query($sql5);
+        $share_id = $row3['id'];
+    } else {
+        mysql_query($sql4);
+        $share_id = mysql_insert_id();
     }
-    else
-    {
-        //多筆商品購買無分享
-        $sql = "INSERT INTO consumer_order SET order_no='$order_id', m_id='$member_no',fb_no='$fb_no', pay_type='$paymentchose', pay_time='".date('Y-m-d H:i:s')."',
-    o_price='$TotalAmount', order_time='".date('Y-m-d H:i:s')."', is_effective='0'";
-        mysql_query($sql);
-        $insert_id = mysql_insert_id();
-        if($insert_id != "")
-        {
-            for($i=0; $i<count($cart_pid2); $i++)
-            {
-                $sql2 = "INSERT INTO consumer_order2 SET order1_id='$insert_id', p_id='$cart_pid2[$i]', p_name='$p_name_ary2[$i]', p_web_price='$cart_price2[$i]', qty='$cart_qty2[$i]'";
-                mysql_query($sql2);
-            }
-            if(mysql_affected_rows() > 0)
-            {
-                $addressee_set = "INSERT INTO addressee_set SET order_no='$order_id', `name`='$send_addressee_name', address='$send_address', cellphone='$send_cellphone', addressee_date='$addressee_date', m_id='$member_no'";
-                mysql_query($addressee_set);
-                create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$member_no,'',$paymentchose);
-            }
-        }
+    return $share_id;
+}
+// step5 create order
+function process_create_order( $order_data, $status = FALSE) {
+    $cart_pid = $order_data['cart_info']['cart_pid'];
+    $p_name_ary = $order_data['cart_info']['p_name_ary'];
+    $cart_price = $order_data['cart_info']['cart_price'];
+    $cart_qty = $order_data['cart_info']['cart_qty'];
+    $order_id = $order_data['order_id'];
+    $TotalAmount = $order_data['TotalAmount'];
+    $pay_time = $order_data['pay_time'];
+    $paymentchose = $order_data['paymentchose'];
+    $member_no = $order_data['member_no'];
+    $manager_id = $order_data['manager_id'];
+    $share_id = $order_data['share_id'];
+    switch ($status) {
+        case 1:
+        case 2:
+            create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$member_no,$share_id,$paymentchose);
+        case 3:
+            create_order2($cart_pid,$p_name_ary,$pay_time,$TotalAmount,$cart_price,$cart_qty,$order_id,$manager_id,$share_id,$paymentchose);
+        default:
     }
 }
+
+if ( (!empty($p_id) && !empty($pay_qty)) || (!empty($cart_pid) && !empty($cart_qty)) ) {
+    // print_r($order_data);
+    if (!empty($p_id) && !empty($pay_qty)) {
+        // 如果商品為單品，將其放入推車資訊中
+        $order_data['cart_info'] = array(
+            'cart_pid' => $p_id,
+            'p_name_ary' => $p_name,
+            'cart_price' => $web_price,
+            'cart_qty' => $pay_qty
+        );
+
+    } else {
+    }
+    // print_r($_POST);
+    // print_r($order_data);
+    // die();
+    // 新增 consumer_order 的資料，並取得 id 放入 insert_id 中
+    $order_data['insert_id'] = insert_into_consumer_order($order_data);
+    // 新增 consumer_order2 的資料，並確認是否成功，成功才往下
+    $step2 = insert_into_consumer_order2($order_data);
+    if ($step2) {
+        // 如果順利輸入交易資料，開始輸入收件人資料
+        insert_into_addressee_set($order_data);
+        // 確認交易是否為分享交易，如果 manager_id 有被設定，即是
+        $step4 = !empty($manager_id);
+        $status = null;
+        if ($step4) {
+            // 如果又有 vip_id 表示會員再次分享
+            if (!empty($vip_id)) {
+                $status = 1;
+            } else {
+                // 如果分享人不是自己
+                if ($manager_id != $_SESSION['manager_no']) {
+                    $status = 2;
+                } else {
+                    // 如果分享人是自己
+                    $status = 3;
+                }
+            }
+        }
+        $order_data['share_id'] = process_with_share( $order_data, $status);
+        process_create_order($order_data, $status);
+    }
+}
+
 
 //從商品詳細頁面直接購買產生歐付寶訂單function
 function create_order($p_name,$pay_time,$TotalAmount,$web_price,$order_id,$share_id,$p_id,$member_no,$pay_qty,$paymentchose)

@@ -124,7 +124,7 @@ while(@$row = mysql_fetch_array($res))
         }
         else
         {
-            $p_name_ary .= $row['p_name'].",";
+            $p_name_ary[] = $row['p_name'];
             @$total += $row['web_price']*$cart_qty_ary[$i];
             ?>
                 <tr>
@@ -153,6 +153,10 @@ while(@$row = mysql_fetch_array($res))
         </script>
         <?php
     }
+}
+if (is_array($p_name_ary)) {
+    $p_name_ary = implode(',',$p_name_ary);
+} else {
 }
 
 if(@$total <30)
@@ -232,21 +236,34 @@ else
         </div>
     </div>
 
-    <input type="hidden" name="TotalAmount" value="<?php echo $total; ?>">
+    <input type="hidden" name="fb_no" value="<?php echo $fb_no; ?>">
+    <input type="hidden" name="manager_id" value="<?php echo @$manager_id; ?>">
+    <input type="hidden" name="vip_id" value="<?php echo @$vip_id; ?>">
+    <!--
     <input type="hidden" name="p_id" value="<?php echo $p_id; ?>">
     <input type="hidden" name="p_name" value="<?php echo $p_name; ?>">
     <input type="hidden" name="web_price" value="<?php echo $pay_pirce; ?>">
     <input type="hidden" name="pay_qty" value="<?php echo $pay_qty; ?>">
-
-    <input type="hidden" name="cart_pid" value="<?php echo $cart_pid; ?>">
-    <input type="hidden" name="p_name_ary" value="<?php echo $p_name_ary; ?>">
-    <input type="hidden" name="cart_price" value="<?php echo $cart_price; ?>">
-    <input type="hidden" name="cart_qty" value="<?php echo $cart_qty; ?>">
-     <input type="hidden" name="fb_no" value="<?php echo $fb_no; ?>">
-    
-
-    <input type="hidden" name="manager_id" value="<?php echo @$manager_id; ?>">
-    <input type="hidden" name="vip_id" value="<?php echo @$vip_id; ?>">
+    -->
+    <?php
+    if (!empty($p_id)) {
+        ?>
+        <input type="hidden" name="cart_pid" value="<?php echo $p_id; ?>">
+        <input type="hidden" name="p_name_ary" value="<?php echo $p_name; ?>">
+        <input type="hidden" name="cart_price" value="<?php echo $pay_pirce; ?>">
+        <input type="hidden" name="cart_qty" value="<?php echo $pay_qty; ?>">
+        <?php
+    }
+    if (!empty($cart_pid)) {
+        ?>
+        <input type="hidden" name="cart_pid" value="<?php echo $cart_pid; ?>">
+        <input type="hidden" name="p_name_ary" value="<?php echo $p_name_ary; ?>">
+        <input type="hidden" name="cart_price" value="<?php echo $cart_price; ?>">
+        <input type="hidden" name="cart_qty" value="<?php echo $cart_qty; ?>">
+        <?php
+    }
+    ?>
+    <input type="hidden" name="TotalAmount" value="<?php echo $total; ?>">
 </form>
 <script>
 
@@ -269,7 +286,7 @@ else
             }
             else
             {
-                $("form#send_oder").submit();
+                $("form#send_oder").submit( /*test_submit()*/ );
             }
         }
         else
@@ -277,7 +294,21 @@ else
             alert('請確認收件人資料是否填寫完整');
         }
     });
-
+    function test_submit() {
+        var e = $("form#send_oder");
+        var url = e.attr('action');
+        var method = e.attr('method');
+        var formdata = e.serialize();
+        $.ajax({
+            url: url,
+            method: method,
+            data: formdata,
+            success: function(msg) {
+                console.log(msg);
+            }
+        });
+        return false;
+    }
     $("#for_member_info").click(function()
     {
         var m_id = $("#m_id").text();
