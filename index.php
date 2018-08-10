@@ -776,7 +776,7 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
             dataType: "text", //回傳形態
             success: function (i) //成功就....
             {
-                if (i == 1) {
+                if (i === 'success') {
                     alert('登入成功');
                     location.href = 'index.php';
                 }
