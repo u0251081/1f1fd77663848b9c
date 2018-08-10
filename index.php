@@ -62,7 +62,8 @@ function showMyNav()
     return $result;
 }
 
-function styleOfMobile() {
+function styleOfMobile()
+{
     $result = '
             .my_nav {
                 margin: 0 auto;
@@ -221,9 +222,11 @@ function has_child($id = false)
 
 function finish_profile()
 {
-    $msg = '請先完成個人資料';
-    $url = 'index.php?url=member_info';
-    showMessagesAndRedirect($msg, $url);
+    if ($_GET['url'] !== 'member_info') {
+        $msg = '請先完成個人資料';
+        $url = 'index.php?url=member_info';
+        showMessagesAndRedirect($msg, $url);
+    }
 }
 
 function checkMemberInfoStatus($member_id)
@@ -664,100 +667,100 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
 
 <script type="text/javascript">
 
-        $("#fb_login_btn").click(function () {
-            function statusChangeCallback(response) {
-                if (response.status === 'connected') {
-                    // Logged into your app and Facebook.
+    $("#fb_login_btn").click(function () {
+        function statusChangeCallback(response) {
+            if (response.status === 'connected') {
+                // Logged into your app and Facebook.
+                testAPI(reback);
+
+            } else {
+                // The person is not logged into your app or we are unable to tell.
+
+                FB.login(function (response) {
+                    // handle the response\
                     testAPI(reback);
-
-                } else {
-                    // The person is not logged into your app or we are unable to tell.
-
-                    FB.login(function (response) {
-                        // handle the response\
-                        testAPI(reback);
-                    }, {scope: 'public_profile,email'});
-                }
+                }, {scope: 'public_profile,email'});
             }
+        }
 
-            function checkLoginState() {
-                FB.getLoginStatus(function (response) {
-                    statusChangeCallback(response);
-                });
-            }
+        function checkLoginState() {
+            FB.getLoginStatus(function (response) {
+                statusChangeCallback(response);
+            });
+        }
 
-            window.fbAsyncInit = function () {
-                FB.init({
-                    appId: '1219742794810228',
-                    autoLogAppEvents: true,
-                    xfbml: true,
-                    version: 'v2.11'
-                });
+        window.fbAsyncInit = function () {
+            FB.init({
+                appId: '1219742794810228',
+                autoLogAppEvents: true,
+                xfbml: true,
+                version: 'v2.11'
+            });
 
-                FB.getLoginStatus(function (response) {
-                    statusChangeCallback(response);
-                });
-            };
+            FB.getLoginStatus(function (response) {
+                statusChangeCallback(response);
+            });
+        };
 
-            (function (d, s, id) {
-                var js, fjs = d.getElementsByTagName(s)[0];
-                if (d.getElementById(id)) return;
-                js = d.createElement(s);
-                js.id = id;
-                js.src = 'https://connect.facebook.net/zh_TW/sdk.js#xfbml=1&version=v2.11&appId=1219742794810228';
-                fjs.parentNode.insertBefore(js, fjs);
-            }(document, 'script', 'facebook-jssdk'));
-
-
-            function testAPI(callback) {
-
-                FB.api('/me', 'GET', {"fields": "id,name,email"}, function (response) {
-                    var account = response.email;
-                    var fbid = response.id;
-                    var name = response.name;
-                    if (fbid != "") {
-                        $.ajax
-                        ({
-                            url: "ajax.php", //接收頁
-                            type: "POST", //POST傳輸
-                            data: {type: "fblogin", account: account, fbid: fbid, name: name}, // key/value
-                            dataType: "text", //回傳形態
-                            success: function (i) //成功就....
-                            {
-                                if (i == 1) {
-                                    alert('登入成功');
-                                    callback();
-                                    location.href = 'index.php';
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = 'https://connect.facebook.net/zh_TW/sdk.js#xfbml=1&version=v2.11&appId=1219742794810228';
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
 
 
-                                }
-                                else {
-                                    alert('登入失敗請重新登入!');
-                                    console.log(i);
-                                }
-                            },
-                            error: function ()//失敗就...
-                            {
+        function testAPI(callback) {
+
+            FB.api('/me', 'GET', {"fields": "id,name,email"}, function (response) {
+                var account = response.email;
+                var fbid = response.id;
+                var name = response.name;
+                if (fbid != "") {
+                    $.ajax
+                    ({
+                        url: "ajax.php", //接收頁
+                        type: "POST", //POST傳輸
+                        data: {type: "fblogin", account: account, fbid: fbid, name: name}, // key/value
+                        dataType: "text", //回傳形態
+                        success: function (i) //成功就....
+                        {
+                            if (i == 1) {
+                                alert('登入成功');
+                                callback();
+                                location.href = 'index.php';
+
+
                             }
-                        });
-                    }
-                    else {
-                        alert('登入失敗請重新登入!');
-                    }
-                });
-            }
+                            else {
+                                alert('登入失敗請重新登入!');
+                                console.log(i);
+                            }
+                        },
+                        error: function ()//失敗就...
+                        {
+                        }
+                    });
+                }
+                else {
+                    alert('登入失敗請重新登入!');
+                }
+            });
+        }
 
-            function fbLogoutUser() {
-                FB.getLoginStatus(function (response) {
-                    if (response && response.status === 'connected') {
-                        FB.logout(function (response) {
+        function fbLogoutUser() {
+            FB.getLoginStatus(function (response) {
+                if (response && response.status === 'connected') {
+                    FB.logout(function (response) {
 
-                        });
-                    }
-                });
-            }
+                    });
+                }
+            });
+        }
 
-        });
+    });
 
     function reback() {
 
