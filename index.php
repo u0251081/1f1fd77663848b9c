@@ -260,10 +260,6 @@ function checkPermissionRequire($url = '')
     return $permission;
 }
 
-print '<!--';
-print_r($_SERVER);
-print '-->';
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
