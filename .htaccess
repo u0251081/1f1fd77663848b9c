@@ -1,0 +1,4 @@
+RewriteEngine on
+RewriteBase /17mai
+RewriteCond $1 !^(index\.php|admin|fonts|js|css|ajax\.php|newAjaxOP\.php|test_lab\.php|mobile_ajax\.php|login\.html|img|$)
+RewriteRule ^(.*)$ 403.php [PT,L,QSA,NC]

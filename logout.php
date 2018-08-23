@@ -1,6 +1,10 @@
 <?php
+print '<script>ajax17mai(\'Member\', \'Logout\');</script>';
+?>
+<?php
+die();
 @session_start();
-header("Content-Type:text/html; charset=utf-8");
+//header("Content-Type:text/html; charset=utf-8");
 
 unset($_SESSION['front_id']);
 unset($_SESSION['front_identity']);

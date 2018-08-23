@@ -6,7 +6,7 @@
     <title>手機登入頁</title>
     <style type="text/css">
         body, html {
-			width:100%;
+            width: 100%;
             height: 100%;
         }
 
@@ -35,14 +35,12 @@
             padding-top: 30px;
         }
 
-        input:focus
-        {
+        input:focus {
             outline: none;
             border: white 1px solid;
         }
 
-        .inputstyle
-        {
+        .inputstyle {
             width: 290px;
             height: 44px;
             color: #000;
@@ -105,42 +103,41 @@
             background-color: #e7e7e7;
         }
 
-        .logo
-        {
+        .logo {
             position: relative;
             top: 40px;
-            font-size:50px;
-            font-family:'標楷體';
-            text-align:center;
-            color:white;
+            font-size: 50px;
+            font-family: '標楷體';
+            text-align: center;
+            color: white;
         }
     </style>
     <script src="admin/js/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" charset="UTF-8" src="js/AJAX17mai.js"></script>
+    <script type="text/javascript" charset="UTF-8" src="js/CookieOperator.js"></script>
 </head>
 <body>
 <div id="logo" class="logo">一起購</div>
 
-<div id="to_login_page">
+<div id="FormPage">
     <div id="content" class="content">
         <div id="login" class="login">
             <div id="web_login" style="display: block;">
                 <ul id="g_list">
                     <li id="g_u">
-                        <input type="text" id="login_mail" class="inputstyle" placeholder="信箱" />
+                        <input type="email" id="inputMail" class="inputstyle" placeholder="信箱"/>
                     </li>
                     <li id="g_p">
-                        <input type="password"  id="login_password" class="inputstyle" placeholder="密碼" />
+                        <input type="password" id="inputPassword" class="inputstyle" placeholder="密碼"/>
                     </li>
                 </ul>
-
-                <div id="go" class="login_btn">登 入</div>
-                <div id="onekey" class=" weak reg" style="display: block;"> 註 冊
-                </div>
+                <div id="go" class="btn1">登 入</div>
+                <div id="onekey" class=" weak btn2" style="display: block;">註 冊</div>
             </div>
         </div>
     </div>
 </div>
-
+<!--
 <div id="to_reg_page" style="display: none;">
     <div id="content" class="content">
         <div id="login" class="login">
@@ -161,138 +158,183 @@
         </div>
     </div>
 </div>
-
+-->
 <script>
+    var action = 'login';
 
-var imei,regid;
-function getIMEI(i , r)
-{
-    imei = i;
-    regid = r;
-}
+    function setFormToLogin() {
+        $('.btn1').text('登 入');
+        $('.btn2').text('註 冊');
+    }
 
-$(".reg").click(function()
-{
-    $("#to_login_page").fadeOut('2000').hide();
-    $("#to_reg_page").fadeIn('2000').show();
-});
+    function setFormToRegister() {
+        $('.btn1').text('註 冊');
+        $('.btn2').text('取 消');
+    }
 
-$(".go_back").click(function()
-{
-    $("#to_login_page").fadeIn('2000').show();
-    $("#to_reg_page").fadeOut('2000').hide();
-});
-
-$(".reg_btn").click(function()
-{
-	var reg_mail = $("#reg_mail").val();
-    var email_reg = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
-	var reg_password = $("#reg_password").val();
-	if(reg_mail != "" && reg_password != "")
-	{
-        if(!email_reg.test(reg_mail))
-        {
-            window.javatojs.showInfoFromJs('請輸入正確的email格式');
-        }
-        else
-        {
-            $.ajax
-            ({
-                url:"ajax.php", //接收頁
-                type:"POST", //POST傳輸
-                data:{type:"mobile_reg", reg_mail:reg_mail, reg_password:reg_password,imei:imei,regid:regid}, // key/value
-                dataType:"text", //回傳形態
-                success:function(i) //成功就....
-                {
-                    if(i != "資料有誤，請重新檢查")
-                    {
-                        location.href=i;
-                    }
-                    else
-                    {
-                        window.javatojs.showInfoFromJs(i);
-                    }
-                },
-                error:function()//失敗就...
-                {
-                    //alert("ajax失敗");
-                }
-            });
-        }
-	}
-	else
-	{
-        window.javatojs.showInfoFromJs("請輸入完整註冊資訊");
-	}
-});
-
-$(".login_btn").click(function()
-{
-    var login_mail = $("#login_mail").val();
-    var email_reg = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
-    var login_password = $("#login_password").val();
-    if(login_mail != "" && login_password != "")
-    {
-        if(!email_reg.test(login_mail))
-        {
-            window.javatojs.showInfoFromJs('請輸入正確的email格式');
-        }
-        else
-        {
-            $.ajax
-            ({
-                url:"ajax.php", //接收頁
-                type:"POST", //POST傳輸
-                data:{type:"mobile_login", login_mail:login_mail, login_password:login_password,imei:imei,regid:regid}, // key/value
-                dataType:"text", //回傳形態
-                success:function(i) //成功就....
-                {
-                    if(i != "資料有誤，請重新檢查")
-                    {
-                        location.href=i;
-                    }
-                    else
-                    {
-                        window.javatojs.showInfoFromJs(i);
-                    }
-                },
-                error:function()//失敗就...
-                {
-                }
-            });
+    function toggleAction() {
+        switch (action) {
+            case 'login':
+                setFormToRegister();
+                action = 'register';
+                break;
+            case 'register':
+                setFormToLogin();
+                action = 'login';
+                break;
+            default:
+                break;
         }
     }
-    else
-    {
-        window.javatojs.showInfoFromJs('請輸入完整登入資訊');
-    }
-});
 
-$("#reg_mail").blur(function()
-{
-    var user_input = $(this).val();
-    if(user_input)
-    {
-        $.ajax
-        ({
-            url:"ajax.php", //接收頁
-            type:"POST", //POST傳輸
-            data:{type:"check_is_reg", account:user_input}, // key/value
-            dataType:"text", //回傳形態
-            success:function(i) //成功就....
-            {
-                if(i == 1)
-                {
-                    $("#reg_mail").val('');
-                    window.javatojs.showInfoFromJs('此帳號已有人註冊過');
+    $(".btn2").click(function () {
+        let target = $('#FormPage');
+        target.fadeOut('2000', toggleAction).hide();
+        target.fadeIn('2000').show();
+    });
+    $('.btn1').click(function () {
+        nextStep();
+    });
+
+    var imei, regid;
+
+    // this function is let app to use
+    function getIMEI(i, r) {
+        imei = i;
+        regid = r;
+        SetCookie('imei',imei);
+    }
+
+    function showMessage(message = '') {
+        let mobile = (typeof window.javatojs !== 'undefined');
+        if (typeof message === 'string') {
+            if (mobile) window.javatojs.showInfoFromJs(message);
+            else alert(message);
+        }
+    }
+
+    function nextStep() {
+        let reg_mail = $("#inputMail").val();
+        let email_reg = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
+        let reg_password = $("#inputPassword").val();
+        let method = '';
+        if (reg_mail != "" && reg_password != "") {
+            if (!email_reg.test(reg_mail)) {
+                showMessage('請輸入正確的email格式');
+            } else {
+                let postData = {account: reg_mail, password: reg_password, imei: imei, regid: regid};
+                switch (action) {
+                    case 'login':
+                        method = 'Login';
+                        break;
+                    case 'register':
+                        method = 'CreateAccount';
+                        break;
+                    default:
+                        break;
                 }
-            },
-            error:function()//失敗就...
-            {
+                ajax17mai('Member', method, {}, postData);
+                return false;
+                $.ajax({
+                    url: "ajax.php", //接收頁
+                    type: "POST", //POST傳輸
+                    data: {
+                        type: "mobile_reg",
+                        reg_mail: reg_mail,
+                        reg_password: reg_password,
+                        imei: imei,
+                        regid: regid
+                    }, // key/value
+                    dataType: "text", //回傳形態
+                    success: function (i) //成功就....
+                    {
+                        if (i != "資料有誤，請重新檢查") {
+                            location.href = i;
+                        }
+                        else {
+                            window.javatojs.showInfoFromJs(i);
+                        }
+                    },
+                    error: function ()//失敗就...
+                    {
+                        //alert("ajax失敗");
+                    }
+                });
             }
-        });
+        }
+        else {
+            showMessage("請輸入完整註冊資訊");
+        }
     }
-});
+
+    $('.logo').on('click', function () {
+        location.href = "index.php";
+    });
+
+    $(".login_btn").click(function () {
+        var login_mail = $("#login_mail").val();
+        var email_reg = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
+        var login_password = $("#login_password").val();
+        if (login_mail != "" && login_password != "") {
+            if (!email_reg.test(login_mail)) {
+                showMessage(imei);
+                // window.javatojs.showInfoFromJs('請輸入正確的email格式');
+            }
+            else {
+                $.ajax
+                ({
+                    url: "ajax.php", //接收頁
+                    type: "POST", //POST傳輸
+                    data: {
+                        type: "mobile_login",
+                        login_mail: login_mail,
+                        login_password: login_password,
+                        imei: imei,
+                        regid: regid
+                    }, // key/value
+                    dataType: "text", //回傳形態
+                    success: function (i) //成功就....
+                    {
+                        if (i != "資料有誤，請重新檢查") {
+                            location.href = i;
+                        }
+                        else {
+                            showMessage(i);
+                        }
+                    },
+                    error: function ()//失敗就...
+                    {
+                    }
+                });
+            }
+        }
+        else {
+            showMessage('請輸入完整登入資訊');
+        }
+    });
+
+    $("#reg_mail").blur(function () {
+        var user_input = $(this).val();
+        if (user_input) {
+            $.ajax
+            ({
+                url: "ajax.php", //接收頁
+                type: "POST", //POST傳輸
+                data: {type: "check_is_reg", account: user_input}, // key/value
+                dataType: "text", //回傳形態
+                success: function (i) //成功就....
+                {
+                    if (i == 1) {
+                        $("#reg_mail").val('');
+                        showMessage('此帳號已有人註冊過');
+                    }
+                },
+                error: function ()//失敗就...
+                {
+                }
+            });
+        }
+    });
 
 </script>
 

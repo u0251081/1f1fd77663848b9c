@@ -2,3 +2,8 @@
 .idea/
 # ignore windows file list
 gitFileList.txt
+# ignore use for backup file
+*.bak*
+/vendor/
+# ignore every sample file
+*.sample

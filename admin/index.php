@@ -1,3 +1,3 @@
 <?php
-header('location:admin_login.php');
+header('location:home.php?url=Login');
 ?>
