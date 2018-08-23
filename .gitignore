@@ -2,3 +2,4 @@
 .idea/
 # ignore windows file list
 gitFileList.txt
+vendor

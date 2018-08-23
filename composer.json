@@ -1,0 +1,13 @@
+{
+    "name": "xin-an/17mai",
+    "description": "this is not for public package",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "ext-json": "*",
+        "ext-pdo" : "*"
+    },
+    "autoload": {
+        "classmap": ["lib"]
+    }
+}
