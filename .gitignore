@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿# ignore some ide temporary
 .idea/
 # ignore windows file list
@@ -7,3 +8,10 @@ gitFileList.txt
 /vendor/
 # ignore every sample file
 *.sample
+=======
+﻿# ignore some ide temporary
+.idea/
+# ignore windows file list
+gitFileList.txt
+vendor
+>>>>>>> tmp

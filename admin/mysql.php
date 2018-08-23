@@ -1,4 +1,4 @@
-﻿<?php
+﻿﻿<?php
 date_default_timezone_set('Asia/Taipei'); //設定台北時區
 
 function sql()

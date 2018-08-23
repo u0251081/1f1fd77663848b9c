@@ -168,7 +168,8 @@ function showMessagesAndRedirect($str = '', $url = '')
     print '<script>';
     if (isset($_COOKIE['imei'])) print "window.javatojs.showInfoFromJs('{$str}');";
     if (!isset($_COOKIE['imei'])) print "alert('{$str}');";
-    if (!empty($url)) print "location.href='{$url}';";
+    if (!empty($url)) print "location.href='{
+    $url}';";
     print '</script>';
 }
 
@@ -281,7 +282,6 @@ function checkPermissionRequire($url = '')
         }
 
         gtag('js', new Date());
-
         gtag('config', 'UA-110556098-5');
     </script>
 
@@ -807,6 +807,7 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
 
     $(document).on('keypress', 'form.aa-login-form', function (event) {
         if (event.which === 13) $('#login_btn').click();
+
     });
 
     $(function () {

@@ -34,7 +34,7 @@
             if(isset($member_id))
             {
                 $sql = "SELECT *,a.id AS aid FROM consumer_order AS a JOIN consumer_order2 AS b ON a.id = b.order1_id WHERE a.m_id='$member_id' GROUP BY order_no";
-                //echo $sql;
+                // echo $sql;
                 $res = mysql_query($sql);
                 while ($row = mysql_fetch_array($res))
                 {
