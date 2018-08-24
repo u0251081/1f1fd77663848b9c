@@ -1,17 +1,9 @@
-<<<<<<< HEAD
 ﻿# ignore some ide temporary
-.idea/
+.idea
 # ignore windows file list
 gitFileList.txt
 # ignore use for backup file
-*.bak*
+# *.bak*
 /vendor/
 # ignore every sample file
 *.sample
-=======
-﻿# ignore some ide temporary
-.idea/
-# ignore windows file list
-gitFileList.txt
-vendor
->>>>>>> tmp

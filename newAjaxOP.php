@@ -43,7 +43,7 @@ if (isset($_SESSION['checkCode']) && $_SESSION['checkCode'] === BaseSecurity) {
     $className = NS . '\\' . $class;
     $methodName = 'ajax' . $method;
     if (dynamicClassMethod($className, $methodName, GET(), POST())) exit();
-    else print json_encode(array('javascript' => '在 ' . $class . ' 裡沒有 ' . $method . ' !!!'));
+    else print json_encode(array('javascript' => 'showMessage(\'在 ' . $class . ' 裡沒有 ' . $method . ' 方法!!!\');'));
 }
 
 function dynamicClassMethod($class, $method, $GET = array(), $POST = array())

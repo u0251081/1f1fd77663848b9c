@@ -6,6 +6,8 @@
  * Time: 3:09 AM
  */
 
+namespace Base17Mai;
+
 function GET($index = false, $default = array())
 {
     if (gettype($index) === 'string') {

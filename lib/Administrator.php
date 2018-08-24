@@ -54,6 +54,11 @@ class Administrator extends Base17mai
     private function Logout()
     {
         unset($_SESSION['adminData']);
+        // old setting
+        unset($_SESSION['id']);
+        unset($_SESSION['name']);
+        unset($_SESSION['identity']);
+        $this->PAE(array('javascript' => 'alert("登出成功");location.href="home.php?url=Login";'));
     }
 
     private function setupAdminData($adminData = array())
