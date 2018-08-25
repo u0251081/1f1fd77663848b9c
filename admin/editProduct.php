@@ -152,7 +152,7 @@ else $vendorContent = $memberNO;
                 </p>
                 <p class="stdformbutton">
                     <input type="submit" name="btn" class="span1 btn btn-primary" value="提交">&nbsp;&nbsp;&nbsp;&nbsp;
-                    <input type="reset" class="span1 btn btn-default" value="清除">
+                        <input type="cancel" class="span1 btn btn-default" value="返回">
                 </p>
             </form>
         </div><!--widgetcontent-->
@@ -163,6 +163,10 @@ else $vendorContent = $memberNO;
         $(document).ready(function () {
             $('#specField').append('<?= $productSpec ?>');
             cnt = $('input[name^="p_spec"]').length;
+        });
+
+        $(document).on('click', 'input[type="cancel"]', function () {
+            location.href = "home.php?url=product";
         });
 
         $(document).on('click', 'button#btn_addSpec', AddSpec);

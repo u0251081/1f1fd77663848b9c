@@ -206,7 +206,7 @@ class Product extends Base17mai
         $productData['class'] = [];
 
         // get Basic Data
-        $SQL = "select * from product where productID = '{$this->productID}' or true limit 1;";
+        $SQL = "select * from product where productID = '{$this->productID}';";
         $rst = $this->PDOOperator($SQL);
         if (isset($rst[0])) {
             foreach ($rst[0] as $key => $value) {
