@@ -2,8 +2,9 @@
 include_once 'mysql.php';
 require_once '../vendor/autoload.php';
 require_once '../lib/toolFunc.php';
+define('BaseSecurity', 'this is 17mai');
 session_start();
-
+$_SESSION['checkCode'] = BaseSecurity;
 use function Base17Mai\take;
 use Base17Mai\Administrator;
 
@@ -13,8 +14,15 @@ if (!$loginStatus && take('url') !== 'Login') die(NoticeToLogin());
 $photoSticker = $admin->getImage();
 $name = $admin->getName();
 $identity = $admin->getIdentity();
+$identityStr = $admin->getIdentityStr();
 $menuHtml = $admin->constructAdminMenu();
 $defaultContentinner = '';
+$includePage = 'topone';
+$url = take('url');
+if ($url !== "") $includePage = $url;
+// old setting
+sql();
+$id = take('id', '', 'session');
 
 
 function NoticeToLogin()
@@ -29,9 +37,6 @@ function NoticeToLogin()
 
 function includePage()
 {
-    sql();
-    $id = take('id', '', 'session');
-    $identity = take('identity', '', 'session');
     $url = take('url');
     // print 'id:'.$id;
     // print 'identity:'.$identity;
@@ -106,8 +111,8 @@ function includePage()
         }
 
         .alert-myNotify {
-            background-color: rgba(0,0,0,0.7);
-            border-color: rgb(0,0,0);
+            background-color: rgba(0, 0, 0, 0.7);
+            border-color: rgb(0, 0, 0);
             border-radius: 25px;
             font-size: 20px;
             width: 200px;
@@ -161,7 +166,7 @@ function includePage()
                                 </h5>
                                 <ul>
                                     <li id="identity">
-                                        您的身份為：<?= $identity ?>
+                                        您的身份為：<?= $identityStr ?>
                                     </li>
                                 </ul>
                                 <ul>
@@ -188,7 +193,7 @@ function includePage()
             <div class="maincontent">
                 <div class="maincontentinner">
                     <!--從這裡開始組合內容-->
-                    <?= includePage() ?>
+                    <?php include_once($includePage . '.php'); ?>
                     <div class="footer">
                         <div class="footer-left">
                             <span><h4>僅供學術研究測試(Only for academic research test)</h4></span>

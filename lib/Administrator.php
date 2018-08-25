@@ -97,6 +97,11 @@ class Administrator extends Base17mai
 
     public function getIdentity()
     {
+        $result = $this->adminData['identity'];
+        return $result;
+    }
+    public function getIdentityStr()
+    {
         $sample = $this->getAllIdentity();
         $index = $this->adminData['identity'];
         if ($index === '') return false;

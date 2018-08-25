@@ -168,8 +168,7 @@ function showMessagesAndRedirect($str = '', $url = '')
     print '<script>';
     if (isset($_COOKIE['imei'])) print "window.javatojs.showInfoFromJs('{$str}');";
     if (!isset($_COOKIE['imei'])) print "alert('{$str}');";
-    if (!empty($url)) print "location.href='{
-    $url}';";
+    if (!empty($url)) print "location.href='{$url}';";
     print '</script>';
 }
 

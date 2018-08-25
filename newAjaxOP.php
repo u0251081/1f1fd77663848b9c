@@ -37,8 +37,8 @@ function POST($index = false, $default = array())
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 if (isset($_SESSION['checkCode']) && $_SESSION['checkCode'] === BaseSecurity) {
     $debugForAJAXOP = false;
-    $class = POST('G');
-    $method = POST('U');
+    $class = POST('G', '');
+    $method = POST('U', '');
     if (strlen($class) < 1 || strlen($method) < 1) exit();
     $className = NS . '\\' . $class;
     $methodName = 'ajax' . $method;

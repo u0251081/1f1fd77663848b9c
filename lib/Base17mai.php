@@ -151,6 +151,24 @@ class Base17mai
         }
     }
 
+    protected function generateRandom($length = 10)
+    {
+        $result = '';
+        for ($i = 0; $i < $length; $i++) {
+            $num = rand(0, 9);
+            $result .= $num;
+        }
+        return $result;
+    }
+
+    protected function NewDateInterval($inputFormat = 'P0Y0M0W0DT0H0M0S', $outputFormat = 'Y-m-d H:i:s') {
+        $now = new \DateTime('now');
+        $interval = new \DateInterval($inputFormat);
+        $result['from'] = $now->format($outputFormat);
+        $result['to'] = $now->add($interval)->format($outputFormat);
+        return $result;
+    }
+
     private function TransactionExample()
     {
 
