@@ -83,7 +83,7 @@ for ($i = 1; $i <= $row; $i++) {
             $.each(ele, function (ind, ele) {
                 let td = document.createElement('td');
                 td.innerText = ele;
-                td.style = "font-size: 25px";
+                td.style = "font-size: 2.5vh";
                 tr.append(td);
             });
             let delbtn = generateDelBtn(ele.productID);
@@ -101,7 +101,7 @@ for ($i = 1; $i <= $row; $i++) {
     }
 
     function generateDelBtn(id) {
-        let icon = document.createElement('c');
+        let icon = document.createElement('i');
         icon.className = "iconsweets-trashcan iconsweets-white";
         let link = document.createElement('a');
         link.href = "javascript:void(0);";
@@ -112,12 +112,13 @@ for ($i = 1; $i <= $row; $i++) {
         link.className = "btn btn-danger";
         link.style = "color:#fff;";
         link.append(icon);
+        link.innerHTML += '&nbsp;&nbsp;&nbsp;';
         link.append("刪除");
         return link;
     }
 
     function generateModBtn(id) {
-        let icon = document.createElement('c');
+        let icon = document.createElement('i');
         icon.className = "iconsweets-bandaid iconsweets-white";
         let link = document.createElement('a');
         link.href = "javascript:void(0);";
@@ -128,6 +129,7 @@ for ($i = 1; $i <= $row; $i++) {
         link.className = "btn";
         link.style = "color:#fff; background: green;";
         link.append(icon);
+        link.innerHTML += '&nbsp;&nbsp;&nbsp;';
         link.append("修改");
         return link;
     }

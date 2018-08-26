@@ -15,6 +15,7 @@ require_once 'mysql.php';
 class Base17mai
 {
     protected static $DB = false;
+    protected $RootDir = '';
     const DO_SELECT = 0;
     const DO_INSERT_NORMAL = 1;
     const DO_INSERT_WITHID = 2;
@@ -30,6 +31,7 @@ class Base17mai
         $dsn .= 'dbname=' . dbname . ';';
         $dsn .= 'charset=' . charset . ';';
         $dsn .= 'port=3306;';
+        $this->RootDir = dirname(__FILE__) . '/../';
         try {
             $connection = new PDO($dsn, dbuser, dbpasswd/*, [PDO::ATTR_PERSISTENT => true]*/);
             $this::$DB = $connection;
@@ -151,6 +153,30 @@ class Base17mai
         }
     }
 
+    protected function generateFileName($path = '', $prefix = '')
+    {
+        do {
+            $result = $this->generateRandomString();
+        } while (file_exists($path . '/' . $prefix . $result));
+        return $prefix . $result;
+    }
+
+    protected function generateRandomString($source = '', $length = 10, $special = false)
+    {
+        if (gettype($source) === 'string') {
+            if ($source === '') $source = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if ($special === true) $source .= '!@#$%^&*()_+-=/|?><.,"\'\\:;';
+            $tableLength = strlen($source) - 1;
+            $result = '';
+            for ($i = 0; $i < $length; $i++) {
+                $result .= $source[rand(0, $tableLength)];
+            }
+            return $result;
+        } else {
+            return false;
+        }
+    }
+
     protected function generateRandom($length = 10)
     {
         $result = '';
@@ -161,7 +187,8 @@ class Base17mai
         return $result;
     }
 
-    protected function NewDateInterval($inputFormat = 'P0Y0M0W0DT0H0M0S', $outputFormat = 'Y-m-d H:i:s') {
+    protected function NewDateInterval($inputFormat = 'P0Y0M0W0DT0H0M0S', $outputFormat = 'Y-m-d H:i:s')
+    {
         $now = new \DateTime('now');
         $interval = new \DateInterval($inputFormat);
         $result['from'] = $now->format($outputFormat);

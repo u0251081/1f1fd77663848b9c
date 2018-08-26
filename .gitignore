@@ -8,3 +8,4 @@ gitFileList.txt
 # ignore every sample file
 *.sample
 assets
+images

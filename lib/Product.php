@@ -229,6 +229,52 @@ class Product extends Base17mai
         else $this->PAE(['javascript' => 'showMessage("刪除失敗，詳情請恰開發人員");']);
     }
 
+    public function ajaxUpdateImage($get, $post)
+    {
+        $productID = addslashes($post['productID']);
+        if ($productID === '') $this->PAE(['javascript' => 'showMessage("更新失敗");']);
+        $oldFile = $this->getImage($productID);
+        $filedir = "images/product/";//指定上傳資料
+        $tmpFiles = [];
+        $newFiles = [];
+        $result = false;
+        $realpath = $this->RootDir . 'admin/';
+        foreach ($_FILES as $key => $value) {
+            if ($value['error'] === 4) continue;
+            if ($key === 'Cover') {
+                $tmpFiles['Cover'] = $value['tmp_name'];
+                $newFiles['Cover'] = $this->generateFileName($realpath . $filedir, date('Ymd'));
+            } else {
+                $tmpFiles[] = $value['tmp_name'];
+                $newFiles[] = $this->generateFileName($filedir, date('Ymd'));
+            }
+        }
+        foreach ($newFiles as $key => $value) {
+            if ($value !== false) {
+                if ($key === 'Cover') $cover = 1;
+                else $cover = 0;
+                // if (file_exists($realpath . $oldFile[$key])) unlink($realpath . $oldFile[$key]);
+                move_uploaded_file($tmpFiles[$key], $realpath . $filedir . $value);
+                $SQL = '';
+                if (isset($oldFile[$key])) $SQL .= "delete from productimage where picture = '{$oldFile[$key]}';";
+                $SQL .= "insert into productimage set productID = :productID, picture = :picture, cover = :cover;";
+                $Para = array(
+                    'productID' => $productID,
+                    'picture' => $filedir . $value,
+                    'cover' => array(
+                        'PARAM_TYPE' => Base17mai::PDO_PARSE_INT,
+                        'VALUE' => $cover
+                    )
+                );
+                $this->PDOOperator($SQL, $Para, Base17mai::DO_SELECT);
+                $result = true;
+            }
+        }
+        if ($result) $javascript = 'showMessage("更新成功");location.href="home.php?url=product_img";';
+        else $javascript = 'showMessage("沒有更新");';
+        $this->PAE(['javascript' => $javascript]);
+    }
+
     public function setEditorData()
     {
         // initial
@@ -433,6 +479,34 @@ class Product extends Base17mai
             if ($value['Prelease'] === '1') $result[$key]['Prelease'] = '上架';
             else $result[$key]['Prelease'] = '下架';
         }
+        return $result;
+    }
+
+    public function listAllProductsWithImage()
+    {
+        $column = ['productID', 'PName', 'null as Image', 'registeredDate'];
+        $SQLColumn = implode(', ', $column);
+        $SQL = 'select ' . $SQLColumn . ' from product;';
+        $rst = $this->PDOOperator($SQL);
+        $result = [];
+        foreach ($rst as $key => $value) {
+            $value['Image'] = $this->getImage($value['productID']);
+            $result[$key] = $value;
+        }
+        return $result;
+    }
+
+    public function getImage($productID = '')
+    {
+        $productID = ($productID === '') ? $this->productData['productID'] : $productID;
+        $SQL = "select picture, Cover from productImage where productID = '{$productID}'";
+        $rst = $this->PDOOperator($SQL);
+        $result = [];
+        foreach ($rst as $key => $value) {
+            if ($value['Cover'] === '1') $result['Cover'] = $value['picture'];
+            else $result[] = $value['picture'];
+        }
+        if (empty($result)) $result['Cover'] = '';
         return $result;
     }
 }
