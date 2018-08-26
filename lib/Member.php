@@ -72,6 +72,29 @@ class Member extends Base17mai
         return !$result;
     }
 
+    private function checkFavorite($member_no, $productID)
+    {
+        $para = ['memberNO' => $member_no, 'productID' => $productID];
+        $table = 'producttrack';
+        $rst = $this->checkExistsDataInTable($para, $table);
+        return $rst;
+    }
+
+    private function removeFromTrack($member_no, $productID)
+    {
+        $SQL = "delete from producttrack where memberNO = '{$member_no}' and productID = '{$productID}';";
+        $result = $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
+        return $result;
+    }
+
+    private function addToTrack($member_no, $productID)
+    {
+        $SQL = "insert into producttrack set memberNO = :memberNO, productID = :productID;";
+        $para = ['memberNO' => $member_no, 'productID' => $productID];
+        $result = $this->PDOOperator($SQL, $para, Base17mai::DO_INSERT_NORMAL);
+        return $result;
+    }
+
     public function ListMember($column = ['Member_no', 'M_name'], $condition = ['status' => '1'])
     {
         $column_sql = strtolower(implode(',', $column));
@@ -625,6 +648,35 @@ class Member extends Base17mai
     {
         if (isset($post['Email'])) $result = $this->checkEmailDuplicate($post['Email']);
         if ($result === true) $this->PAE(['javascript' => 'alert("電子郵件重複");$("#Email").val("");']);
+    }
+
+    public function ajaxFavorite($get, $post)
+    {
+        $mid = addslashes($post['memberNO']);
+        $pid = addslashes($post['productID']);
+        $status = $this->checkFavorite($mid, $pid);
+        if ($status) {
+            $this->removeFromTrack($mid, $pid);
+            $this->PAE(['javascript' => 'showMessage("取消追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/clean.png");']);
+        } else {
+            $this->addToTrack($mid, $pid);
+            $this->PAE(['javascript' => 'showMessage("完成追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/add.png");']);
+        }
+    }
+
+    public function checkTrackStatus($mid, $pid)
+    {
+        $para = ['memberNO' => $mid, 'productID' => $pid];
+        $table = 'producttrack';
+        $rst = $this->checkExistsDataInTable($para, $table);
+        $result = "<a id=\"fav_btn{$pid}\" href=\"javascript:void(0);\" onclick=\"favorite({$pid});\">";
+        if ($rst) {
+            $result .= "<img src=\"img/icon/add.png\">";
+        } else {
+            $result .= "<img src=\"img/icon/clean.png\">";
+        }
+        $result .= "</a>";
+        return $result;
     }
 
 }

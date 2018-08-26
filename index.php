@@ -13,7 +13,7 @@ $member_id = '';
  */
 if (isset($_SESSION['fb_id'])) $member_id = $_SESSION['fb_id'];
 if (isset($_SESSION["member_no"])) $member_id = $_SESSION["member_no"];
-
+print 'member_id: ' . $member_id;
 /*
  * 判斷登入的是電腦版還是手機版
  */
@@ -325,6 +325,9 @@ function checkPermissionRequire($url = '')
     <script src="admin/js/jquery-1.9.1.min.js"></script>
     <script src="js/AJAX17mai.js" type="text/javascript" charset="UTF-8"></script>
     <script src="js/CookieOperator.js" type="text/javascript" charset="UTF-8"></script>
+
+    <!-- Bootstrap Notify -->
+    <script type="text/javascript" src="admin/js/bootstrap-notify.min.js"></script>
     <script>
         // this function is let app to use
         function getIMEI(i, r) {
@@ -339,14 +342,36 @@ function checkPermissionRequire($url = '')
         });
 
         function showMessage(message = '') {
+            /*
             let mobile = (typeof window.javatojs !== 'undefined');
             if (typeof message === 'string') {
                 if (mobile) window.javatojs.showInfoFromJs(message);
                 else alert(message);
             }
+            */
+            $.notify(message, {
+                allow_dismiss: false,
+                type: 'myNotify',
+                placement: {
+                    from: 'bottom',
+                    align: 'right'
+                },
+                delay:100
+            });
         }
     </script>
     <style>
+
+        .alert-myNotify {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-color: rgb(0, 0, 0);
+            border-radius: 25px;
+            font-size: 20px;
+            width: 200px;
+            height: 50px;
+            color: #FFFFFF;
+        }
+
         .my_nav {
             display: none;
         }
