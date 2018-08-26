@@ -39,6 +39,32 @@ function ajax17mai(G = '', U = '', GET = {}, POST = {}, callBack = defaultAjaxCa
     }
 }
 
+function ajax17maiFile(G = '', U = '', GET = {}, extra = {}, source = document.createElement('form'), callBack = defaultAjaxCallBack, debug = false) {
+    let formData = new FormData(source);
+    formData.append('G', G);
+    formData.append('U', U);
+    $.each(extra, function (ind, ele) {
+        formData.append(ind, ele);
+    });
+    if (debug) {
+        console.log('G ' + G);
+        console.log('U ' + U);
+        console.log('extra ' + extra);
+        console.log('Form ' + formData);
+    }
+    let baseURL = '../newAjaxOP.php';
+    let url = baseURL + '?' + objToStr(GET);
+    $.ajax({
+        url: url,
+        method: 'post',
+        data: formData,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: callBack
+    });
+}
+
 function defaultAjaxCallBack(response) {
     let debug = false;
     try {

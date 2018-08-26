@@ -39,6 +39,44 @@ function ajax17mai(G = '', U = '', GET = {}, POST = {}, callBack = defaultAjaxCa
     }
 }
 
+function ajax17maiFile(G = '', U = '', GET = {}, extra = {}, source = document.createElement('form'), callBack = defaultAjaxCallBack, debug = false) {
+    let formData = new FormData(source);
+    formData.append('G', G);
+    formData.append('U', U);
+    $.each(extra, function (ind, ele) {
+        formData.append(ind, ele);
+    });
+    if (debug) {
+        console.log('G ' + G);
+        console.log('U ' + U);
+        console.log('extra ' + extra);
+        console.log('Form ' + formData);
+    }
+    let baseURL = '../newAjaxOP.php';
+    let url = baseURL + '?' + objToStr(GET);
+    $.ajax({
+        url: url,
+        method: 'post',
+        data: formData,
+        contentType: false,
+        cache: false,
+        processData: false,
+        success: callBack
+    });
+
+    function objToStr(obj) {
+        let result = '';
+        if (typeof obj === 'object') {
+            let vararr = [];
+            for (let i in obj) {
+                vararr.push(i + '=' + obj[i]);
+            }
+            result = vararr.join('&');
+        }
+        return result;
+    }
+}
+
 function defaultAjaxCallBack(response) {
     let debug = false;
     try {
@@ -56,7 +94,7 @@ function getFormData(form) {
     let indexed_array = {};
     $.map(unindexed_array, function (n, i) {
         let inputName = n['name'];
-        let dataName = n['name'].replace('[]','');
+        let dataName = n['name'].replace('[]', '');
         if (inputName.indexOf('[]') === -1)
             indexed_array[n['name']] = n['value'];
         else {
