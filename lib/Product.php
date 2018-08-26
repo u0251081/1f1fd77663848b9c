@@ -171,6 +171,13 @@ class Product extends Base17mai
                 $javascript .= 'showMessage(\'商品數量填寫有誤\');';
                 $checkFlag = false;
             }
+        } else {
+            $QuantityOrigin = $this->getOriginQuantity($receive['productID']);
+            $quantity = $QuantityOrigin + $receive['supplement'];
+            if ($quantity < 0) {
+                $javascript .= 'showMessage(\'商品數量填寫有誤\');';
+                $checkFlag = false;
+            }
         }
         if (!isset($receive['unitPrice']) || $receive['unitPrice'] < 1) {
             $javascript .= 'showMessage(\'商品價格填寫有誤\');';
@@ -192,20 +199,24 @@ class Product extends Base17mai
     {
         if ($this->CheckInputForNewProduct($post)) {
             $result = $this->UpdateProduct($post);
+            $javascript = '';
             if ($result) {
                 if (isset($post['productID'])) {
-                    $this->PAE(['javascript' => 'showMessage("修改成功");']);
+                    $javascript .= 'showMessage("修改成功");';
+                    $javascript .= 'location.href="home.php?url=product";';
                 } else {
-                    $this->PAE(['javascript' => 'showMessage("新增成功");']);
+                    $javascript .= 'showMessage("新增成功");';
+                    $javascript .= 'location.href="home.php?url=product";';
                 }
             } else {
                 if (isset($post['productID'])) {
-                    $this->PAE(['javascript' => 'showMessage("沒有修改");']);
+                    $javascript .= 'showMessage("沒有修改");';
                 } else {
-                    $this->PAE(['javascript' => 'showMessage("新增失敗");']);
+                    $javascript .= 'showMessage("新增失敗");';
                 }
 
             }
+            $this->PAE(['javascript' => $javascript]);
         }
         exit();
     }

@@ -5,6 +5,7 @@ require_once '../lib/toolFunc.php';
 define('BaseSecurity', 'this is 17mai');
 session_start();
 $_SESSION['checkCode'] = BaseSecurity;
+
 use function Base17Mai\take;
 use Base17Mai\Administrator;
 
@@ -78,8 +79,8 @@ function includePage()
     <script type="text/javascript" src="js/bootstrap-notify.min.js"></script>
 
     <!-- DataTable -->
-    <link rel="stylesheet" href="../assets/vendor/DataTable/datatables.css">
-    <script type="text/javascript" src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="../assets/vendor/DataTable/datatable-1.10.18.css">
+    <script type="text/javascript" src="../assets/vendor/DataTable/datatable-1.10.18.js"></script>
 
     <script>
         function showMessage(msg) {
@@ -111,6 +112,10 @@ function includePage()
         }
     </script>
     <style>
+        .dataTables_paginate {
+            bottom: 0px;
+        }
+
         td {
             font-size: 2.5vh;
         }
