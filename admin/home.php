@@ -76,6 +76,11 @@ function includePage()
 
     <!-- Bootstrap Notify -->
     <script type="text/javascript" src="js/bootstrap-notify.min.js"></script>
+
+    <!-- DataTable -->
+    <link rel="stylesheet" href="../assets/vendor/DataTable/datatables.css">
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
     <script>
         function showMessage(msg) {
             $.notify(msg, {

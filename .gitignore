@@ -7,3 +7,4 @@ gitFileList.txt
 /vendor/
 # ignore every sample file
 *.sample
+assets

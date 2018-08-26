@@ -111,6 +111,23 @@ class Product extends Base17mai
         return $result;
     }
 
+    private function deleteProduct($productID = '')
+    {
+        $productID = addslashes($productID);
+        $SQL = "delete from product where productID = '{$productID}';";
+        $rstM = $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
+        $SQL = "delete from product_class where productID = '{$productID}';";
+        $rstC = $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
+        $SQL = "delete from productspec where productID = '{$productID}';";
+        $rstS = $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
+        $SQL = "delete from product_img where productID = '{$productID}';";
+        $rstI = $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
+        $SQL = "delete from product_track where productID = '{$productID}';";
+        $rstT = $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
+        $result = $rstC || $rstI || $rstM || $rstS || $rstT;
+        return $result;
+    }
+
     private function getOriginQuantity($productID = '')
     {
         $SQL = 'select QuantityOrigin from product where productID = :productID';
@@ -150,7 +167,6 @@ class Product extends Base17mai
             $checkFlag = false;
         }
         if (!isset($receive['productID'])) {
-            print_r($receive);
             if (!isset($receive['Quantity']) || $receive['Quantity'] < 1) {
                 $javascript .= 'showMessage(\'商品數量填寫有誤\');';
                 $checkFlag = false;
@@ -192,6 +208,14 @@ class Product extends Base17mai
             }
         }
         exit();
+    }
+
+    public function ajaxDeleteProduct($get, $post)
+    {
+        if (isset($post['productID'])) $productID = addslashes($post['productID']);
+        $result = $this->deleteProduct($productID);
+        if ($result) $this->PAE(['javascript' => 'showMessage("刪除成功");']);
+        else $this->PAE(['javascript' => 'showMessage("刪除失敗，詳情請恰開發人員");']);
     }
 
     public function setEditorData()
@@ -386,5 +410,18 @@ class Product extends Base17mai
         $result = ($status === '1') ? 'checked' : '';
         return $result;
 
+    }
+
+    public function listAllProducts()
+    {
+        $column = ['productID', 'PName', 'QuantityOrigin', 'QuantityRemain', 'registeredDate', 'Prelease'];
+        $SQLColumn = implode(', ', $column);
+        $SQL = 'select ' . $SQLColumn . ' from product';
+        $result = $this->PDOOperator($SQL);
+        foreach ($result as $key => $value) {
+            if ($value['Prelease'] === '1') $result[$key]['Prelease'] = '上架';
+            else $result[$key]['Prelease'] = '下架';
+        }
+        return $result;
     }
 }
