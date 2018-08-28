@@ -24,7 +24,7 @@ $product_res = mysql_query($product_sql);
                                         <article class="aa-latest-blog-single" style="height: 450px;">
                                             <figure class="aa-blog-img">
                                                 <a class="aa-product-img"
-                                                   href="index.php?url=product_detail&product_id=<?php echo $product_row['productID']; ?>">
+                                                   href="index.php?url=product_detail&id=<?php echo $product_row['id']; ?>">
                                                     <?php
                                                     $sql = "SELECT * FROM productimage WHERE productID='" . $product_row['productID'] . "' AND Cover = 1;";
                                                     $res = mysql_query($sql);
@@ -58,8 +58,8 @@ $product_res = mysql_query($product_sql);
 
 
                                                     <a href="javascript:void(0);"
-                                                       id="cart_btn<?php echo $product_row['id']; ?>"
-                                                       onclick="add_cart(<?php echo $product_row['id']; ?>)">
+                                                       id="cart_btn<?= $product_row['id'] ?>"
+                                                       onclick="add_cart(<?= $product_row['id'] ?>)">
                                                         <img src="img/icon/clean_cart.png">
                                                     </a>
 
@@ -168,6 +168,10 @@ $product_res = mysql_query($product_sql);
         ajax17mai('Member', 'Favorite', {}, {memberNO: '<?= $member_id ?>', productID: id});
     }
 
+    function add_cart(id) {
+        ajax17mai('Consumer', 'AddToCart', {}, {member_id: '<?= $member_id ?>', productID: id, Quantity: 1, spec: ''});
+    }
+
     function add_favorite(id) {
         $.ajax
         ({
@@ -199,74 +203,6 @@ $product_res = mysql_query($product_sql);
         });
     }
 
-    function add_cart(id) {
-        $.ajax
-        ({
-            url: "ajax.php", //接收頁
-            type: "POST", //POST傳輸
-            data: {type: "cart", pid: id}, // key/value
-            dataType: "text", //回傳形態
-            success: function (i) //成功就....
-            {
-                if (i == 1) {
-                    $("#cart_btn" + id).find("img").attr('src', 'img/icon/add_cart.png');
-                }
-                else if (i == 0) {
-                    $("#cart_btn" + id).find("img").attr('src', 'img/icon/clean_cart.png');
-                }
-                else {
-                    if ($(window).width() < 767) {
-                        window.javatojs.showInfoFromJs('請先登入或成為會員，才能使用此功能');
-                    }
-                    else {
-                        alert('請先登入或成為會員，才能使用此功能');
-                    }
-                }
-            },
-            error: function ()//失敗就...
-            {
-                //alert("ajax失敗");
-            }
-        });
-    }
-
     $(function () {
-        $.ajax
-        ({
-            url: "ajax.php", //接收頁
-            type: "POST", //POST傳輸
-            data: {type: "favorite_search"}, // key/value
-            dataType: "text", //回傳形態
-            success: function (i) //成功就....
-            {
-                var id = i.split(",");
-                for (var n = 0; n < id.length; n++) {
-                    $("#fav_btn" + id[n]).find("img").attr('src', 'img/icon/add.png');
-                }
-            },
-            error: function ()//失敗就...
-            {
-                //alert("ajax失敗");
-            }
-        });
-
-        $.ajax
-        ({
-            url: "ajax.php", //接收頁
-            type: "POST", //POST傳輸
-            data: {type: "cart_search"}, // key/value
-            dataType: "text", //回傳形態
-            success: function (i) //成功就....
-            {
-                var id = i.split(",");
-                for (var n = 0; n < id.length; n++) {
-                    $("#cart_btn" + id[n]).find("img").attr('src', 'img/icon/add_cart.png');
-                }
-            },
-            error: function ()//失敗就...
-            {
-                //alert("ajax失敗");
-            }
-        });
     });
 </script>

@@ -74,7 +74,7 @@ class Member extends Base17mai
 
     private function checkFavorite($member_no, $productID)
     {
-        $para = ['memberNO' => $member_no, 'productID' => $productID];
+        $para = ['member_no' => $member_no, 'productID' => $productID];
         $table = 'producttrack';
         $rst = $this->checkExistsDataInTable($para, $table);
         return $rst;
@@ -82,15 +82,15 @@ class Member extends Base17mai
 
     private function removeFromTrack($member_no, $productID)
     {
-        $SQL = "delete from producttrack where memberNO = '{$member_no}' and productID = '{$productID}';";
+        $SQL = "delete from producttrack where member_no = '{$member_no}' and productID = '{$productID}';";
         $result = $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
         return $result;
     }
 
     private function addToTrack($member_no, $productID)
     {
-        $SQL = "insert into producttrack set memberNO = :memberNO, productID = :productID;";
-        $para = ['memberNO' => $member_no, 'productID' => $productID];
+        $SQL = "insert into producttrack set member_no = :member_no, productID = :productID;";
+        $para = ['member_no' => $member_no, 'productID' => $productID];
         $result = $this->PDOOperator($SQL, $para, Base17mai::DO_INSERT_NORMAL);
         return $result;
     }
@@ -577,6 +577,19 @@ class Member extends Base17mai
         return $result;
     }
 
+    private function AddToCart($member_id, $productID, $Quantity) {
+        $status = $this->checkCartStatus($mid, $pid);
+        if ($status) {
+            $SQL = 'update shoppingcart set Quantity = Quantity + :Quantity where member_no = :member_id and productID = :productID;';
+            $para = ['member_id' => $mid, 'productID' => $pid, 'Quantity' => ['PARAM_TYPE' => Base17mai::PDO_PARSE_INT, 'VALUE' => $Quantity]];
+            $result = $this->PDOOperator($SQL, $para, Base17mai::DO_UPDATE);
+        } else {
+            $SQL = 'insert into shoppingcart set member_no = :member_id, productID = :productID, Quantity = :Quantity;';
+            $para = ['member_id' => $mid, 'productID' => $pid, 'Quantity' => ['PARAM_TYPE' => Base17mai::PDO_PARSE_INT, 'VALUE' => $Quantity]];
+            $result = $this->PDOOperator($SQL, $para, Base17mai::DO_INSERT_NORMAL);
+        }
+    }
+
     public function ajaxCreateAccount($get, $post)
     {
         $account = addslashes($post['account']);
@@ -654,6 +667,7 @@ class Member extends Base17mai
     {
         $mid = addslashes($post['memberNO']);
         $pid = addslashes($post['productID']);
+        if ($mid === '') $this->PAE(['javascript' => 'showMessage("請先登入方可使用本功能");']);
         $status = $this->checkFavorite($mid, $pid);
         if ($status) {
             $this->removeFromTrack($mid, $pid);
@@ -666,7 +680,7 @@ class Member extends Base17mai
 
     public function checkTrackStatus($mid, $pid)
     {
-        $para = ['memberNO' => $mid, 'productID' => $pid];
+        $para = ['member_no' => $mid, 'productID' => $pid];
         $table = 'producttrack';
         $rst = $this->checkExistsDataInTable($para, $table);
         $result = "<a id=\"fav_btn{$pid}\" href=\"javascript:void(0);\" onclick=\"favorite({$pid});\">";
@@ -677,6 +691,40 @@ class Member extends Base17mai
         }
         $result .= "</a>";
         return $result;
+    }
+
+    public function ajaxAddToCart($get, $post)
+    {
+        $mid = addslashes($post['member_id']);
+        $pid = addslashes($post['productID']);
+        $Quantity = addslashes($post['Quantity']);
+        if ($mid === '') $this->PAE(['javascript' => 'showMessage("請先登入方可使用本功能");']);
+        $result = $this->AddToCart($mid, $pid, $Quantity);
+        if ($result) $this->PAE(['javascript' => 'showMessage("成功加入購物車");']);
+        else $this->PAE(['javascript' => 'showMessage("加入購物車失敗");']);
+    }
+
+    private function checkCartStatus($mid, $pid)
+    {
+        $para = ['productID' => $pid, 'member_no' => $mid];
+        $table = 'shoppingcart';
+        $rst = $this->checkExistsDataInTable($para, $table);
+        return $rst;
+    }
+
+    public function listCart($member_id = '')
+    {
+        $SQL = '';
+        $SQL .= 'select a.productID as id, PName, unitPrice, Quantity , Prelease from shoppingcart as a';
+        $SQL .= ' left join product as b on a.productID = b.id where member_no = :member_id;';
+        $para = ['member_id' => addslashes($member_id)];
+        $rst = $this->PDOOperator($SQL, $para);
+        print_r($rst);
+        if (!isset($rst[0])) return null;
+        foreach ($rst as $key => $value) {
+            $rst[$key]['Prelease'] = ($rst[$key]['Prelease'] === '1') ? '上架' : '下架';
+        }
+        return $rst;
     }
 
 }

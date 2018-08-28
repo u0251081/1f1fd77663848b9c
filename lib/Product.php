@@ -8,6 +8,8 @@
 
 namespace Base17Mai;
 
+include_once 'toolFunc.php';
+
 class Product extends Base17mai
 {
     private $productID;
@@ -30,7 +32,6 @@ class Product extends Base17mai
         $setColumn = '';
         $where = '';
         if (!$update) {
-            $SQL .= "insert into product set productID = :productID, registeredDate = :registeredDate, overDate = :overDate,";
             $headSQL .= "insert into product";
             $dateData = $this->NewDateInterval('P4M');
             $ParaSpecial = array(
@@ -40,25 +41,15 @@ class Product extends Base17mai
             $productID = $this->generateProductID();
         } else {
             $headSQL .= "update product";
-            $SQL .= "update product set";
             $productID = $product['productID'];
-            $QuantityOrigin = $this->getOriginQuantity($productID);
-            $product['Quantity'] = $QuantityOrigin + $product['supplement'];
         }
-        $SQL .= " vendorID = :vendorID, PName = :PName, youtube = :youtube,";
-        $SQL .= " QuantityOrigin = :oquantity, QuantityRemain = :rquantity, unitPrice = :unitPrice, feedBack = :feedBack,";
-        $SQL .= " bonus = :bonus, healthResume = :healthResume, description = :description, Prelease = :Prelease,";
-        $SQL .= " productInformation = :productInformation";
         if ($update) {
-            $SQL .= " where productID = :productID";
             $where .= " where productID = :productID";
         }
         $ParaCommon = array(
             'productID' => $productID,
             'vendorID' => $product['s_id'],
             'PName' => $product['PName'],
-            'QuantityOrigin' => $product['Quantity'],
-            'QuantityRemain' => $product['Quantity'],
             'unitPrice' => $product['unitPrice'],
             'feedBack' => $product['feedBack'],
             'bonus' => $product['bonus'],
@@ -96,17 +87,25 @@ class Product extends Base17mai
         $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
         $SQL = 'insert into productspec set productID = :productID, specCode = :specCode, specification = :specification;';
         $cnt = 0;
-        foreach ($product['p_spec'] as $key => $value) {
-            if (strlen($value) > 0) {
+        $total = 0;
+        foreach ($product['spec'] as $key => $value) {
+            if (strlen($value['specification']) > 0) {
                 $Para = array(
                     'productID' => $productID,
                     'specCode' => $cnt,
-                    'specification' => $value
+                    'specification' => $value['specification'],
+                    'Quantity' => $value['Quantity']
                 );
+                $total += $Para['Quantity'];
+                $ColumnSQL = $this->GenerateSQLColumn(', ', $Para);
+                $SQL = "insert into productspec set {$ColumnSQL} ;";
                 $rstSpec = $this->PDOOperator($SQL, $Para, Base17mai::DO_INSERT_NORMAL);
                 $cnt++;
             }
         }
+        $SQL = 'update product set QuantityOrigin = :Quantity, QuantityRemain = :Quantity where productID = :productID;';
+        $Para = ['Quantity' => $total, 'productID' => $productID];
+        $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_UPDATE);
         $result = $rstMan || $rstCls || $rstSpec;
         return $result;
     }
@@ -166,6 +165,17 @@ class Product extends Base17mai
             $javascript .= 'showMessage(\'商品名稱必須填寫\');';
             $checkFlag = false;
         }
+        if (!isset($receive['spec'])) {
+            $checkFlag = false;
+            $javascript .= 'showMessage("請至稍登錄一種規格");';
+        } else {
+            $checkFlag = false;
+            foreach ($receive['spec'] as $key => $value) {
+                if (!empty($value['specification'])) $checkFlag = true;
+            }
+            if ($checkFlag === false) $javascript .= 'showMessage("請至稍登錄一種規格");';
+        }
+        /*
         if (!isset($receive['productID'])) {
             if (!isset($receive['Quantity']) || $receive['Quantity'] < 1) {
                 $javascript .= 'showMessage(\'商品數量填寫有誤\');';
@@ -179,6 +189,7 @@ class Product extends Base17mai
                 $checkFlag = false;
             }
         }
+        */
         if (!isset($receive['unitPrice']) || $receive['unitPrice'] < 1) {
             $javascript .= 'showMessage(\'商品價格填寫有誤\');';
             $checkFlag = false;
@@ -193,6 +204,29 @@ class Product extends Base17mai
         }
         if (!$checkFlag) print json_encode(['javascript' => $javascript]);
         return $checkFlag;
+    }
+
+    private function getInventory($productID, $specCode)
+    {
+        if ($specCode === -1) {
+            $SQL = 'select sum(Quantity) as Quantity from productspec where productID = :productID;';
+            $Para = ['productID' => $productID];
+        } else {
+            $SQL = 'select Quantity from productspec where productID = :productID and specCode = :specCode;';
+            $Para = ['productID' => $productID, 'specCode' => $specCode];
+        }
+        $rst = $this->PDOOperator($SQL, $Para);
+        $result = isset($rst[0]) ? (Int)$rst[0]['Quantity'] : 0;
+        return $result;
+    }
+
+    public function IDToProductID($ID)
+    {
+        $SQL = 'select productID from product where id = :id;';
+        $Para['id'] = $ID;
+        $rst = $this->PDOOperator($SQL, $Para);
+        $result = isset($rst[0]) ? $rst[0]['productID'] : null;
+        return $result;
     }
 
     public function ajaxUpdateProduct($get, $post)
@@ -275,6 +309,30 @@ class Product extends Base17mai
         $this->PAE(['javascript' => $javascript]);
     }
 
+    public function ajaxRefreshQuantity($get, $post)
+    {
+        $productID = addslashes(take('productID', '', 'post'));
+        $specCode = addslashes(take('spec', '', 'post'));
+        preg_match('/^\d+/', $specCode, $match);
+        $specCode = isset($match[0]) ? $match[0] : -1;
+        $productID = $this->IDToProductID($productID);
+        if ($productID === null) $this->PAE(['javascript' => '系統異常，請與開發人員聯絡']);
+        $inventory = $this->getInventory($productID, $specCode);
+        $result['javascript'] = '';
+        if ($specCode === -1) $limit = 0;
+        else $limit = ($inventory > 10) ? 10 : $inventory;
+
+        // Quantity Options
+        $options = '';
+        for ($i = 0; $i <= $limit; $i++) {
+            if ($i === 0) $options .= "<option value=\"none\">請選擇數量</option>";
+            else $options .= "<option value=\"{$i}\">{$i}</option>";
+        }
+        $result['javascript'] .= "\$('#Quantity').html('{$options}');";
+        $result['javascript'] .= "\$('#Remain').html('{$inventory}');";
+        $this->PAE($result);
+    }
+
     public function setEditorData()
     {
         // initial
@@ -283,7 +341,7 @@ class Product extends Base17mai
         $productData = [];
         foreach ($rst as $value)
             $productData[$value['Field']] = '';
-        $productData['p_spec'] = [];
+        $productData['spec'] = [];
         $productData['class'] = [];
 
         // get Basic Data
@@ -300,8 +358,9 @@ class Product extends Base17mai
         $rst = $this->PDOOperator($SQL);
         if (isset($rst[0])) {
             foreach ($rst as $key => $value) {
-                $productData['p_spec'][$key]['specCode'] = $value['specCode'];
-                $productData['p_spec'][$key]['specification'] = $value['specification'];
+                $productData['spec'][$key]['specCode'] = $value['specCode'];
+                $productData['spec'][$key]['specification'] = $value['specification'];
+                $productData['spec'][$key]['Quantity'] = $value['Quantity'];
             }
         }
 
@@ -327,6 +386,13 @@ class Product extends Base17mai
     {
         $productID = $this->productData['productID'];
         $result = (empty($productID)) ? '新商品ID將於刊登後自動產生' : $productID . "<input type=\"hidden\" name=\"productID\" value=\"{$productID}\">";
+        return $result;
+    }
+
+    public function getVendor()
+    {
+        $productID = $this->productData['vendorID'];
+        $result = $productID;
         return $result;
     }
 
@@ -382,16 +448,26 @@ class Product extends Base17mai
             $result = '';
             foreach ($specification as $key => $value) {
                 $spec = $value['specification'];
-                $input = "<input type=\"text\" name=\"p_spec[" . $key . "]\" class=\"input-large\" placeholder = \"請輸入商品規格\" value=\"{$spec}\" />";
-                $code = "<span>" . str_pad((String)($key + 1), 2, '0', STR_PAD_LEFT) . "&nbsp;:&nbsp;&nbsp;</span>";
+                $quantity = $value['Quantity'];
+                $inputSpec = "<input type=\"text\" name=\"spec[{$key}][specification]\" class=\"input-large\" placeholder = \"請輸入商品規格\" value=\"{$spec}\" />";
+                $inputQuantity = "<input type=\"number\" name=\"spec[{$key}][Quantity]\" class=\"input-large\" placeholder = \"請輸入商品數量\" value=\"{$quantity}\" />";
+                $code = str_pad((String)($key + 1), 2, '0', STR_PAD_LEFT);
+                $code = "<span>" . $code . "&nbsp;:&nbsp;&nbsp;</span>";
                 $remove = "<a href=\"javascript:void(0);\" class=\"btn_RemoveSpec\" value=\"" . $key . "\" >&#x2715;</a>";
                 $br = "<br id=\"{$key}\">";
-                $div = "<div>{$code}{$input}{$remove}</div>";
+                $div = "<div>{$code}{$inputSpec}&nbsp;:&nbsp;&nbsp;{$inputQuantity}{$remove}</div>";
                 if ($key > 0) $result .= $br . $div;
                 else $result = $div;
             }
         }
         return $result;
+    }
+
+    public function ListSpecification($productID = '')
+    {
+        $SQL = "select specCode, specification from productspec where productID = '{$productID}';";
+        $rst = $this->PDOOperator($SQL);
+        return $rst;
     }
 
     public function getPName()
@@ -402,7 +478,7 @@ class Product extends Base17mai
 
     public function getQuantity()
     {
-        $quantity = $this->productData['QuantityRemain'];
+        $quantity = $this->productData['QuantityOrigin'];
         if ($quantity === '') {
             $result = "<input type=\"number\" name=\"Quantity\" min=\"0\" class=\"input-large\" placeholder=\"請輸入商品數量\">";
         } else {
@@ -507,6 +583,15 @@ class Product extends Base17mai
             else $result[] = $value['picture'];
         }
         if (empty($result)) $result['Cover'] = '';
+        return $result;
+    }
+
+    public function getOperatorCode($id = '')
+    {
+        $id = addslashes($id);
+        $SQL = "select productID from product where id = '{$id}';";
+        $rst = $this->PDOOperator($SQL);
+        $result = isset($rst[0]) ? $rst[0]['productID'] : '';
         return $result;
     }
 }

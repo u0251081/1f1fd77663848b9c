@@ -12,6 +12,7 @@ use function Base17Mai\take;
 $pid = take('id', '');
 $Product = new Product($pid);
 $Product->setEditorData();
+$vendorID = $Product->getVendor();
 $subTitle = $Product->getEditorProductTitle();
 $productID = $Product->getProductID();
 $productClass = $Product->getClass();
@@ -26,28 +27,30 @@ $description = $Product->getDescription();
 $productInfo = $Product->getInformation();
 $youtube = $Product->getYoutube();
 $prelease = $Product->getRelease();
-function vendorOption()
+function vendorOption($vendorID)
 {
     $sql = "SELECT * FROM supplier";
     $res = mysql_query($sql);
     $html = '';
     while ($row = mysql_fetch_array($res)) {
-        $html .= "<option value=\"{$row['id']}\">{$row['supplier_name']}</option>";
+        $selected = ($vendorID === $row['id']) ? 'selected' : '';
+        $html .= "<option value=\"{$row['id']}\"{$selected}>{$row['supplier_name']}</option>";
     }
     return $html;
 }
 
-function generateVendorList()
+function generateVendorList($vendorID)
 {
-    $vendorList = vendorOption();
+    $vendorList = vendorOption($vendorID);
     $result = "
     <select name=\"s_id\" id=\"s_id\" class=\"uniformselect\">
-        <option>請選擇供應商</option>{$vendorList}
+        <option>請選擇供應商</option>
+        {$vendorList}
     </select>";
     return $result;
 }
 
-if ($identity === 'admin') $vendorContent = generateVendorList();
+if ($identity === 'admin') $vendorContent = generateVendorList($vendorID);
 else $vendorContent = $memberNO;
 
 
@@ -90,12 +93,14 @@ else $vendorContent = $memberNO;
                     </span>
                     <span class="field" id="specField" style="display: flex; flex-direction: column;"></span>
                 </p>
+                <!--
                 <p>
-                    <label>商品欲數量</label>
+                    <label>商品欲登記數量</label>
                     <span class="field">
                         <?= $quantity ?>
                     </span>
                 </p>
+                -->
                 <p>
                     <label>商品價格</label>
                     <span class="field">
@@ -152,7 +157,7 @@ else $vendorContent = $memberNO;
                 </p>
                 <p class="stdformbutton">
                     <input type="submit" name="btn" class="span1 btn btn-primary" value="提交">&nbsp;&nbsp;&nbsp;&nbsp;
-                        <input type="cancel" class="span1 btn btn-default" value="返回">
+                    <input type="cancel" class="span1 btn btn-default" value="返回">
                 </p>
             </form>
         </div><!--widgetcontent-->
@@ -179,7 +184,21 @@ else $vendorContent = $memberNO;
             return false;
         });
 
-        function RemoveSpec(id) {
+        function RemoveSpec(element) {
+            let target = element.parentElement;
+            let next = target.nextElementSibling;
+            let parent = target.parentElement;
+            let last = parent.lastElementChild;
+            target.remove();
+            if (next !== null && next.tagName === 'BR') next.remove();
+            if (last !== null && last.tagName === 'BR') parent.removeChild(last);
+            cnt--;
+            for (let i = 0; i < parent.childElementCount; i++) {
+                let tmp = parent.children.item(i);
+                if (tmp.tagName === 'BR') continue;
+                tmp.children.item(0).innerHTML = String(i + 1).padStart(2, '0');
+            }
+            /*
             $('input[name="p_spec[' + id + ']"]').parent().get(0).replaceWith('');
             if (id > 0) var target = document.getElementById(String(Number(id)));
             else var target = document.getElementById(String(Number(id + 1)));
@@ -198,17 +217,44 @@ else $vendorContent = $memberNO;
                 tmpSpec.attr('name', 'p_spec[' + (i - 1) + ']');
                 tmpRemove.attr('value', i - 1);
             }
+            */
             if (cnt < 10) $('button#btn_addSpec').prop('disabled', false);
         }
 
         function AddSpec() {
             if (cnt < 10) {
-                let element = "<input type=\"text\" name=\"p_spec[" + cnt + "]\" class=\"input-large\" placeholder=\"請輸入商品規格\"/>";
-                let remove = "<a href=\"javascript:void(0);\" class=\"btn_RemoveSpec\" value=\"" + cnt + "\">&#x2715;</a>";
-                let code = "<span>" + String(cnt + 1).padStart(2, '0') + "</span>";
-                let html = "<div>" + code + '&nbsp;:&nbsp;&nbsp;' + element + remove + "</div>";
-                if (cnt > 0) html = "<br id=\"" + cnt + "\">" + html;
-                $('#specField').append(html);
+                let code = document.createElement('span');
+                code.innerHTML += String(cnt + 1).padStart(2, '0');
+                let spec = document.createElement('input');
+                spec.type = "text";
+                spec.name = 'spec[' + cnt + '][specification]';
+                spec.className = 'input-large';
+                spec.placeholder = '請輸入商品規格';
+                let Quantity = document.createElement('input');
+                Quantity.type = 'number';
+                Quantity.name = 'spec[' + cnt + '][Quantity]';
+                Quantity.min = 0;
+                Quantity.className = 'input-large';
+                Quantity.placeholder = '請輸入商品數量';
+                let s = '&nbsp;&nbsp;&nbsp;';
+                let remove = document.createElement('a');
+                remove.innerHTML = '&#x2715';
+                remove.href = 'javascript:void(0);';
+                remove.addEventListener('click', function () {
+                    RemoveSpec(this)
+                });
+                let html = document.createElement('div');
+                html.append(code);
+                html.innerHTML += '&nbsp;:&nbsp;&nbsp;';
+                html.append(spec);
+                html.innerHTML += s;
+                html.append(Quantity);
+                html.append(remove);
+                let target = document.getElementById('specField');
+                target = $('#specField');
+                console.log(target.children().last().prop('tagName') === 'DIV');
+                if (target.children().last().prop('tagName') === 'DIV') target.append("<br>");
+                target.append(html);
                 cnt++;
                 if (cnt === 10) $('button#btn_addSpec').prop('disabled', true);
             } else {

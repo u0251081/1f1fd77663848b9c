@@ -2,6 +2,7 @@
 define('BaseSecurity', 'this is 17mai');
 session_start();
 require_once 'vendor/autoload.php';
+require_once 'lib/toolFunc.php';
 require_once 'admin/mysql.php';
 $_SESSION['checkCode'] = BaseSecurity;
 sql();
@@ -367,7 +368,7 @@ function checkPermissionRequire($url = '')
             border-color: rgb(0, 0, 0);
             border-radius: 25px;
             font-size: 20px;
-            width: 200px;
+            min-width: 50px;
             height: 50px;
             color: #FFFFFF;
         }
