@@ -8,6 +8,8 @@
 
 namespace Base17Mai;
 
+require_once 'toolFunc.php';
+
 use Base17Mai\Bank;
 
 class Member extends Base17mai
@@ -17,7 +19,7 @@ class Member extends Base17mai
     public function __construct()
     {
         parent::__construct();
-        if (isset($_SESSION['member_no'])) $this->memberNO = $_SESSION['member_no'];
+        if (isset($_SESSION['member_no'])) $this->memberNO = &$_SESSION['member_no'];
     }
 
     public function CreateNewMember($account = '', $password = '')
@@ -577,7 +579,8 @@ class Member extends Base17mai
         return $result;
     }
 
-    private function AddToCart($member_id, $productID, $Quantity) {
+    private function AddToCart($member_id, $productID, $Quantity)
+    {
         $status = $this->checkCartStatus($mid, $pid);
         if ($status) {
             $SQL = 'update shoppingcart set Quantity = Quantity + :Quantity where member_no = :member_id and productID = :productID;';
@@ -626,7 +629,7 @@ class Member extends Base17mai
         $account = addslashes($post['account']);
         $password = addslashes($post['password']);
         $result = $this->Login($account, $password);
-        if (isset($post['imei']) && strlen($post['imei']) === 15)
+        if ($result && isset($post['imei']) && strlen($post['imei']) === 15)
             $this->UpdateIMEI($post['imei'], $post['regid']);
         if ($result) {
             $javascript .= 'showMessage(\'登入成功\');';
@@ -670,12 +673,20 @@ class Member extends Base17mai
         if ($mid === '') $this->PAE(['javascript' => 'showMessage("請先登入方可使用本功能");']);
         $status = $this->checkFavorite($mid, $pid);
         if ($status) {
-            $this->removeFromTrack($mid, $pid);
-            $this->PAE(['javascript' => 'showMessage("取消追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/clean.png");']);
+            $rst = $this->removeFromTrack($mid, $pid);
+            if ($rst) $this->PAE(['javascript' => 'showMessage("取消追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/clean.png");']);
         } else {
-            $this->addToTrack($mid, $pid);
-            $this->PAE(['javascript' => 'showMessage("完成追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/add.png");']);
+            $rst = $this->addToTrack($mid, $pid);
+            if ($rst) $this->PAE(['javascript' => 'showMessage("完成追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/add.png");']);
         }
+    }
+
+    public function ajaxRemoveTrack($get, $post)
+    {
+        $member_no = addslashes(take('member_no', '', 'session'));
+        $productID = addslashes(take('productID', '', 'post'));
+        $result = $this->removeFromTrack($member_no, $productID);
+        if ($result) $this->PAE(['javascript' => 'showMessage("成功取消追蹤"); $(\'a#'.$productID.'\').closest(\'tr\').remove();']);
     }
 
     public function checkTrackStatus($mid, $pid)

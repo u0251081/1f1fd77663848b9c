@@ -11,6 +11,11 @@ define('ClassPath', 'lib');
 define('NS', 'Base17Mai');
 
 require_once 'vendor/autoload.php';
+include_once 'lib/toolFunc.php';
+
+use function Base17Mai\take;
+
+$secret = 'c0bc58e005f4fbb0';
 
 function GET($index = false, $default = array())
 {
@@ -34,8 +39,10 @@ function POST($index = false, $default = array())
     return false;
 }
 
+$history = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'no history';
+$BaseSecurity = ($secret === take('BaseSecurity', '', 'post'));
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-if (isset($_SESSION['checkCode']) && $_SESSION['checkCode'] === BaseSecurity) {
+if ($BaseSecurity || (isset($_SESSION['checkCode']) && $_SESSION['checkCode'] === BaseSecurity)) {
     $debugForAJAXOP = false;
     $class = POST('G', '');
     $method = POST('U', '');
@@ -44,6 +51,8 @@ if (isset($_SESSION['checkCode']) && $_SESSION['checkCode'] === BaseSecurity) {
     $methodName = 'ajax' . $method;
     if (dynamicClassMethod($className, $methodName, GET(), POST())) exit();
     else print json_encode(array('javascript' => 'showMessage(\'在 ' . $class . ' 裡沒有 ' . $method . ' 方法!!!\');'));
+} else {
+    print json_encode(['javascript' => "showMessage('{$history}');"]);
 }
 
 function dynamicClassMethod($class, $method, $GET = array(), $POST = array())

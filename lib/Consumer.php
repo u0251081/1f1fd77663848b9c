@@ -122,6 +122,64 @@ class Consumer extends Base17mai
         $this->PAE($result);
     }
 
+    private function checkCartInput($cartitem = [])
+    {
+        if (!isset($cartitem['productID'])) return false;
+        if (!isset($cartitem['Quantity'])) return false;
+        if (!isset($cartitem['specCode'])) return false;
+        return true;
+    }
+
+    private function UpdateCart($item)
+    {
+        $member_id = take('member_no', '', 'session');
+        $item['member_no'] = $member_id;
+        $productID = $item['productID'];
+        $Remain = $this->getInventory($productID, $item['specCode']);
+        if ($item['Quantity'] <= $Remain) {
+            $SQL = 'update shoppingcart set Quantity = :Quantity where member_no = :member_no and productID = :productID and specCode = :specCode;';
+            $result = $this->PDOOperator($SQL, $item, Base17mai::DO_UPDATE);
+            return $result;
+        } else {
+            return false;
+        }
+    }
+
+    public function ajaxUpdateCart($get, $post)
+    {
+        $cnt = 0;
+        if (is_array($post['cartItem'])) {
+            foreach ($post['cartItem'] as $item) {
+                if ($this->checkCartInput($item)) {
+                    $result = $this->UpdateCart($item);
+                    if ($result) $cnt++;
+                } else continue;
+            }
+        }
+        if ($cnt === 0) $javascript = 'showMessage("沒有更新");';
+        else $javascript = "showMessage('購物車中有{$cnt}件商品更新');";
+        $this->PAE(['javascript' => $javascript]);
+    }
+
+    private function RemoveFromCart($member_no, $cartID)
+    {
+        $SQL = 'delete from shoppingcart where member_no = :member_no and id = :id;';
+        $Para = ['id' => $cartID, 'member_no' => $member_no];
+        $result = $this->PDOOperator($SQL, $Para, Base17mai::DO_DELETE);
+        return $result;
+    }
+
+    public function ajaxRemoveFromCart($get, $post)
+    {
+        $CartID = addslashes($post['CID']);
+        $member_no = take('member_no', '', 'session');
+        $result = $this->RemoveFromCart($member_no, $CartID);
+        if ($result) $javascript = 'showMessage("刪除成功");$(\'tr#'.$CartID.'\').remove();';
+        else $javascript = 'showMessage("刪除失敗，請嘗試刷新頁面");';
+        $this->PAE(['javascript' => $javascript]);
+
+    }
+
 }
 
 ?>

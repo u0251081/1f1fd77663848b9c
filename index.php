@@ -18,6 +18,8 @@ print 'member_id: ' . $member_id;
 /*
  * 判斷登入的是電腦版還是手機版
  */
+$history = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'index.php';
+
 $_SESSION['device'] = checkUserAgent();
 $htm_para1 = '';
 $htm_para2 = '';
@@ -262,7 +264,7 @@ function checkPermissionRequire($url = '')
 {
     $permission = 'public';
     $memberRequirePages = ['member_center', 'member_info', 'wishlist', 'cart', 'bonus_search', 'bonus_use',
-        'order_search', 'to_manager', 'pay_check', 'order_detail'];
+        'order_search', 'to_manager', 'pay_check', 'order_detail', 'TrackList'];
     if (in_array($url, $memberRequirePages)) $permission = 'member';
     return $permission;
 }

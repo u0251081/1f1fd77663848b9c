@@ -8,6 +8,8 @@ $Product = new Product();
 $PID = $Product->getOperatorCode($productID);
 $images = $Product->getImage($PID);
 $imagesHTML = imagesToHtml($images);
+$history = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'index.php';
+
 function imagesToHtml($images = [])
 {
     $result = '';
@@ -265,9 +267,12 @@ if (!empty($_GET['fb_no'])) {
                                     </form>
                                     <div class="aa-prod-view-bottom">
                                         <?= $trackStatus ?>&nbsp;&nbsp;&nbsp;
-                                        <span class="my_cart_btn" onclick="add_cart(<?= $productID ?>);">加入購物車</span>&nbsp;&nbsp;&nbsp;
+                                        <span class="my_cart_btn" onclick="add_cart(<?= $productID ?>);">加入購物車</span>
+                                        &nbsp;&nbsp;&nbsp;
                                         <!-- <span class="my_cart_btn" name="add" b_type="1">加入追蹤清單</span>&nbsp;&nbsp;&nbsp; -->
                                         <span class="my_cart_btn" id="directBuy">直接購買</span>
+                                        &nbsp;&nbsp;&nbsp;
+                                        <span class="my_cart_btn" id="BackList">返回</span>
                                     </div>
                                 </div>
 
@@ -307,14 +312,25 @@ if (!empty($_GET['fb_no'])) {
     </div>
 </section>
 <script>
-    $(document).on('change','select[name="spec"]',refrechQuantity);
+    $(document).on('change', 'select[name="spec"]', refrechQuantity);
 
-    $(document).on('click', 'span#directBuy',function() {directBuy(this)});
+    $(document).on('click', 'span#directBuy', function () {
+        directBuy(this)
+    });
+
+    $(document).on('click', 'span#BackList', function () {
+        window.location.href = '<?= $history ?>';
+    });
+
+
+    function favorite(id) {
+        ajax17mai('Member', 'Favorite', {}, {memberNO: '<?= $member_id ?>', productID: id});
+    }
 
     function directBuy(element) {
         let formData = getFormData('form#productForm');
         console.log(formData);
-        ajax17mai('Consumer','DirectBuy',{},formData);
+        ajax17mai('Consumer', 'DirectBuy', {}, formData);
     }
 
     (function () {
