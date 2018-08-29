@@ -174,10 +174,26 @@ class Consumer extends Base17mai
         $CartID = addslashes($post['CID']);
         $member_no = take('member_no', '', 'session');
         $result = $this->RemoveFromCart($member_no, $CartID);
-        if ($result) $javascript = 'showMessage("刪除成功");$(\'tr#'.$CartID.'\').remove();';
+        if ($result) $javascript = 'showMessage("刪除成功");$(\'tr#' . $CartID . '\').remove();';
         else $javascript = 'showMessage("刪除失敗，請嘗試刷新頁面");';
         $this->PAE(['javascript' => $javascript]);
+    }
 
+    private function GetListInCart($member_no)
+    {
+        $SQL = 'select b.PName, b.unitPrice, c.specification, a.Quantity from shoppingcart as a left join product as b on a.productID = b.id left join productspec as c on a.specCode = c.specCode and b.productID = c.productID where a.member_no = :member_no;';
+        $para['member_no'] = $member_no;
+        $result = $this->PDOOperator($SQL,$para);
+        if (!isset($result)) return false;
+        return $result;
+    }
+
+    public function ListProductInCart()
+    {
+        $member_no = take('member_no', '', 'session');
+        $result = $this->GetListInCart($member_no);
+        if ($result === false) return false;
+        else return $result;
     }
 
 }
