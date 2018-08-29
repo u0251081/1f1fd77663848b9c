@@ -62,7 +62,7 @@ class Member extends Base17mai
                 $num = rand(0, 9);
                 $member_no .= $num;
             }
-        } while (!$this->checkMemberNoRepeat($member_no));
+        } while ($member_no[0] === '0' || !$this->checkMemberNoRepeat($member_no));
         return $member_no;
     }
 

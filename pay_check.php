@@ -1,9 +1,21 @@
 <?php
+
+use Base17Mai\Consumer;
+
 $share_data = array(
     'fb_no' => isset($_POST['fb_no']) ? $_POST['fb_no'] : '',
     'manager_id' => isset($_POST['manager_id']) ? $_POST['manager_id'] : '', //代表收到行銷經理分享=>綁定SESSION的分享的行銷經理id
     'vip_id' => isset($_POST['vip_id']) ? $_POST['vip_id'] : ''
 );
+
+function SetAmount(&$product)
+{
+    if (is_array($product)) {
+        foreach ($product as $key => $value) {
+            $product[$key]['Amount'] = (int)$value['Quantity'] * $value['unitPrice'];
+        }
+    }
+}
 
 function is_first_login($member_id = FALSE)
 {
@@ -30,7 +42,7 @@ function is_first_login($member_id = FALSE)
     }
 }
 
-function prepare_purchasing_data()
+function prepare_purchasing_data($product)
 {
     $product_data = array();
     if (isset($_POST['cart_pid'])) {
@@ -96,11 +108,11 @@ function product_expired()
     <?php
 }
 
-function price_amount(array $product)
+function price_amount($product = array())
 {
     $total = 0;
     foreach ($product as $v) {
-        $total += (int)$v['amount'];
+        $total += (int)$v['Amount'];
     }
     return $total;
 }
@@ -111,10 +123,11 @@ function produce_tbody(array $product)
     $total = price_amount($product);
     foreach ($product as $k => $v) {
         $tbody .= '<tr>';
-        $tbody .= "<td align='center'>{$v['p_name']}</td>";
-        $tbody .= "<td align='right'>{$v['price']}</td>";
-        $tbody .= "<td align='right'>{$v['qty']}</td>";
-        $tbody .= "<td align='right' colspan='2'>{$v['amount']}</td>";
+        $tbody .= "<td align='center'>{$v['PName']}</td>";
+        $tbody .= "<td align='right'>{$v['unitPrice']}</td>";
+        $tbody .= "<td align='center'>{$v['specification']}</td>";
+        $tbody .= "<td align='right'>{$v['Quantity']}</td>";
+        $tbody .= "<td align='right' colspan='2'>{$v['Amount']}</td>";
         $tbody .= '</tr>';
     }
     if ($total < 30) {
@@ -146,31 +159,13 @@ function bottom_btn($total = 0)
     return $html;
 }
 
-function produce_order($share_data, $product)
-{
-    $total = price_amount($product);
-    $html = '';
-    $html .= "<form action='testpay.php' method='post' id='send_oder'>";
-    $html .= "<input type='hidden' name='fb_no' value='{$share_data['fb_no']}'>";
-    $html .= "<input type='hidden' name='manager_id' value='{$share_data['manager_id']}'>";
-    $html .= "<input type='hidden' name='vip_id' value='{$share_data['vip_id']}'>";
-    foreach ($product as $k => $v) {
-        $html .= "<input type='hidden' name='product[$k][pid]' value='{$product[$k]['pid']}'>";
-        $html .= "<input type='hidden' name='product[$k][p_name]' value='{$product[$k]['p_name']}'>";
-        $html .= "<input type='hidden' name='product[$k][price]' value='{$product[$k]['price']}'>";
-        $html .= "<input type='hidden' name='product[$k][qty]' value='{$product[$k]['qty']}'>";
-    }
-    $html .= "<input type='hidden' name='TotalAmount' value='{$total}'>";
-    $html .= "</form>";
-    return $html;
-}
-
 is_first_login($member_id);
-$product = prepare_purchasing_data();
+$Consumer = new Consumer();
+$product = $Consumer->ListProductInCart();
+SetAmount($product);
 $total = price_amount($product);
 $tbody = produce_tbody($product);
 $bottom_button = bottom_btn($total);
-$order_form = produce_order($share_data, $product);
 ?>
 <style>
     #pay_check_div {
@@ -193,10 +188,11 @@ $order_form = produce_order($share_data, $product);
                 </th>
             </tr>
             <tr style="background: #DDDDDD;">
-                <th>商品名稱</th>
-                <th>價格</th>
-                <th>數量</th>
-                <th colspan="4">小計</th>
+                <th style="text-align: center;">商品名稱</th>
+                <th style="text-align: center;">價格</th>
+                <th style="text-align: center;">規格</th>
+                <th style="text-align: center;">數量</th>
+                <th colspan="4" style="text-align: center;">小計</th>
             </tr>
             </thead>
             <tbody>
@@ -242,7 +238,6 @@ $order_form = produce_order($share_data, $product);
         </table>
     </div>
 </div>
-<?= $order_form ?>
 <script>
 
     $(function () {

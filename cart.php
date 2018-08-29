@@ -213,7 +213,8 @@ $cartTable = generateTable($productList);
         ajax17mai('Consumer', 'UpdateCart', {}, {cartItem: getCartData()});
     });
 
-    $(document).on('click', 'input#btn3', function () {
+    $(document).on('click', 'a#btn3', function () {
+        location.href = 'index.php?url=pay_check';
     });
 
     var pid;
