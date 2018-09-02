@@ -1,9 +1,25 @@
 <?php
+
+use Base17Mai\Consumer;
+
+print '<!--';
+print_r($_POST);
+print '-->';
+
 $share_data = array(
     'fb_no' => isset($_POST['fb_no']) ? $_POST['fb_no'] : '',
     'manager_id' => isset($_POST['manager_id']) ? $_POST['manager_id'] : '', //代表收到行銷經理分享=>綁定SESSION的分享的行銷經理id
     'vip_id' => isset($_POST['vip_id']) ? $_POST['vip_id'] : ''
 );
+
+function SetAmount(&$product)
+{
+    if (is_array($product)) {
+        foreach ($product as $key => $value) {
+            $product[$key]['Amount'] = (int)$value['Quantity'] * $value['unitPrice'];
+        }
+    }
+}
 
 function is_first_login($member_id = FALSE)
 {
@@ -30,7 +46,7 @@ function is_first_login($member_id = FALSE)
     }
 }
 
-function prepare_purchasing_data()
+function prepare_purchasing_data($product)
 {
     $product_data = array();
     if (isset($_POST['cart_pid'])) {
@@ -96,11 +112,11 @@ function product_expired()
     <?php
 }
 
-function price_amount(array $product)
+function price_amount($product = array())
 {
     $total = 0;
     foreach ($product as $v) {
-        $total += (int)$v['amount'];
+        $total += (int)$v['Amount'];
     }
     return $total;
 }
@@ -111,10 +127,11 @@ function produce_tbody(array $product)
     $total = price_amount($product);
     foreach ($product as $k => $v) {
         $tbody .= '<tr>';
-        $tbody .= "<td align='center'>{$v['p_name']}</td>";
-        $tbody .= "<td align='right'>{$v['price']}</td>";
-        $tbody .= "<td align='right'>{$v['qty']}</td>";
-        $tbody .= "<td align='right' colspan='2'>{$v['amount']}</td>";
+        $tbody .= "<td align='center'>{$v['PName']}</td>";
+        $tbody .= "<td align='right'>{$v['unitPrice']}</td>";
+        $tbody .= "<td align='center'>{$v['specification']}</td>";
+        $tbody .= "<td align='right'>{$v['Quantity']}</td>";
+        $tbody .= "<td align='right' colspan='2'>{$v['Amount']}</td>";
         $tbody .= '</tr>';
     }
     if ($total < 30) {
@@ -139,38 +156,20 @@ function bottom_btn($total = 0)
     if ($total < 30) {
         $html .= '<input type="button" class="btn btn-default" value="返回" onclick="window.history.back(-1);">&nbsp;&nbsp;';
     } else {
-        $html .= '<input type="checkbox" id="for_member_info"><label for="for_member_info">同會員資料</label>&nbsp;&nbsp;';
+        $html .= '<label for="for_member_info"><input type="checkbox" id="for_member_info">同會員資料</label>&nbsp;&nbsp;';
         $html .= '<input type="button" class="btn btn-default" value="返回" onclick="window.history.back(-1);">&nbsp;&nbsp;';
         $html .= '<input type="button" class="btn btn-primary" value="結帳" id="pay_btn">';
     }
     return $html;
 }
 
-function produce_order($share_data, $product)
-{
-    $total = price_amount($product);
-    $html = '';
-    $html .= "<form action='testpay.php' method='post' id='send_oder'>";
-    $html .= "<input type='hidden' name='fb_no' value='{$share_data['fb_no']}'>";
-    $html .= "<input type='hidden' name='manager_id' value='{$share_data['manager_id']}'>";
-    $html .= "<input type='hidden' name='vip_id' value='{$share_data['vip_id']}'>";
-    foreach ($product as $k => $v) {
-        $html .= "<input type='hidden' name='product[$k][pid]' value='{$product[$k]['pid']}'>";
-        $html .= "<input type='hidden' name='product[$k][p_name]' value='{$product[$k]['p_name']}'>";
-        $html .= "<input type='hidden' name='product[$k][price]' value='{$product[$k]['price']}'>";
-        $html .= "<input type='hidden' name='product[$k][qty]' value='{$product[$k]['qty']}'>";
-    }
-    $html .= "<input type='hidden' name='TotalAmount' value='{$total}'>";
-    $html .= "</form>";
-    return $html;
-}
-
 is_first_login($member_id);
-$product = prepare_purchasing_data();
+$Consumer = new Consumer();
+$product = $Consumer->ListProductInCart();
+SetAmount($product);
 $total = price_amount($product);
 $tbody = produce_tbody($product);
 $bottom_button = bottom_btn($total);
-$order_form = produce_order($share_data, $product);
 ?>
 <style>
     #pay_check_div {
@@ -184,65 +183,67 @@ $order_form = produce_order($share_data, $product);
         }
     }
 </style>
-<div class="container" id="pay_check_div">
-    <div class="row">
-        <table class="table table-bordered table-responsive table-condensed">
-            <thead>
-            <tr>
-                <th colspan="5"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">再次確認購買!</h3>
-                </th>
-            </tr>
-            <tr style="background: #DDDDDD;">
-                <th>商品名稱</th>
-                <th>價格</th>
-                <th>數量</th>
-                <th colspan="4">小計</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?= $tbody ?>
-            <tr>
-                <th colspan="5"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">收件人資料</h3></th>
-            </tr>
-            <tr style="background: #DDDDDD;">
-                <th>姓名</th>
-                <th>電話</th>
-                <th>地址</th>
-                <th>宅配日期</th>
-                <th>付款方式</th>
-            </tr>
-            <tr>
-                <td><input type="text" name="addressee_name" class="form-control"></td>
-                <td><input type="text" name="cellphone" class="form-control"></td>
-                <td><input type="text" name="address" class="form-control"></td>
-                <td>
-                    <select name="addressee_date" class="form-control">
-                        <option value="1">周一至周五</option>
-                        <option value="2">周六</option>
-                        <option value="3">不指定</option>
-                    </select>
-                </td>
-                <td>
-                    <select name="paymentchose" class="form-control">
-                        <option value="Credit">信用卡</option>
-                        <option value="CVS">超商代碼繳費</option>
-                    </select>
-                </td>
-            </tr>
-            <tr align="right">
-                <td colspan="5">
-                    <div class="container">
-                        <div class="row">
-                            <?= $bottom_button ?>
+<form action="ECPay.php" method="post" id="send_order">
+    <div class="container" id="pay_check_div">
+        <div class="row">
+            <table class="table table-bordered table-responsive table-condensed">
+                <thead>
+                <tr>
+                    <th colspan="5"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">再次確認購買!</h3>
+                    </th>
+                </tr>
+                <tr style="background: #DDDDDD;">
+                    <th style="text-align: center;">商品名稱</th>
+                    <th style="text-align: center;">價格</th>
+                    <th style="text-align: center;">規格</th>
+                    <th style="text-align: center;">數量</th>
+                    <th colspan="4" style="text-align: center;">小計</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?= $tbody ?>
+                <tr>
+                    <th colspan="5"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">收件人資料</h3></th>
+                </tr>
+                <tr style="background: #DDDDDD;">
+                    <th>姓名</th>
+                    <th>電話</th>
+                    <th>地址</th>
+                    <th>宅配日期</th>
+                    <th>付款方式</th>
+                </tr>
+                <tr>
+                    <td><input type="text" name="Recipient" class="form-control"></td>
+                    <td><input type="text" name="CellPhone" class="form-control"></td>
+                    <td><input type="text" name="Address" class="form-control"></td>
+                    <td>
+                        <select name="DateType" class="form-control">
+                            <option value="1">周一至周五</option>
+                            <option value="2">周六</option>
+                            <option value="3">不指定</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="paymentChose" class="form-control">
+                            <option value="Credit">信用卡</option>
+                            <option value="CVS">超商代碼繳費</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr align="right">
+                    <td colspan="5">
+                        <div class="container">
+                            <div class="row">
+                                <?= $bottom_button ?>
+                            </div>
                         </div>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-<?= $order_form ?>
+</form>
 <script>
 
     $(function () {
@@ -250,26 +251,31 @@ $order_form = produce_order($share_data, $product);
     });
 
     $("#pay_btn").click(function () {
-        var addressee_name = $("input[name='addressee_name']").val();
-        var cellphone = $("input[name='cellphone']").val();
-        var address = $("input[name='address']").val();
-        var addressee_date = $("input[name='addressee_date']").val();
-        var mobile_num_reg = /^[09]{2}[0-9]{8}$/;
-        if (addressee_name != '' && cellphone != "" && addressee_date != "" && address != "") {
+        if (checkInput()) $("form#send_order").submit(/*test_submit()*/);
+    });
+
+    function checkInput() {
+        let addressee_name = $("input[name='Recipient']").val();
+        let cellphone = $("input[name='CellPhone']").val();
+        let address = $("input[name='Address']").val();
+        let addressee_date = $("input[name='DateType']").val();
+        let mobile_num_reg = /^09[0-9]{8}$/;
+        if (addressee_name !== '' && cellphone !== "" && addressee_date !== "" && address !== "") {
             if (!mobile_num_reg.test(cellphone)) {
                 alert('手機號碼格式錯誤');
-            }
-            else {
-                $("form#send_oder").submit(test_submit());
+                return false;
+            } else {
+                return true;
             }
         }
         else {
             alert('請確認收件人資料是否填寫完整');
+            return false;
         }
-    });
+    }
 
     function test_submit() {
-        var e = $("form#send_oder");
+        var e = $("form#send_order");
         var url = e.attr('action');
         var method = e.attr('method');
         var formdata = e.serialize();
@@ -285,6 +291,9 @@ $order_form = produce_order($share_data, $product);
     }
 
     $("#for_member_info").click(function () {
+        let Recipient = $("input[name='Recipient']");
+        let CellPhone = $("input[name='CellPhone']");
+        let Address = $("input[name='Address']");
         var m_id = $("#m_id").text();
         if ($(this).is(':checked')) {
             if (m_id) {
@@ -296,9 +305,9 @@ $order_form = produce_order($share_data, $product);
                     dataType: "json",
                     success: function (i) {
                         $.each(i, function (key, item) {
-                            $("input[name='addressee_name']").val(item['m_name']);
-                            $("input[name='cellphone']").val(item['cellphone']);
-                            $("input[name='address']").val(item['address']);
+                            Recipient.val(item['m_name']);
+                            CellPhone.val(item['cellphone']);
+                            Address.val(item['address']);
                         });
                     },
                     error: function () {
@@ -308,9 +317,9 @@ $order_form = produce_order($share_data, $product);
             }
         }
         else {
-            $("input[name='addressee_name']").val('');
-            $("input[name='cellphone']").val('');
-            $("input[name='address']").val('');
+            Recipient.val('');
+            CellPhone.val('');
+            Address.val('');
         }
     });
 </script>
