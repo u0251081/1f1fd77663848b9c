@@ -14,8 +14,8 @@ $OrderList = $Consumer->ListOrder();
 
 <style>
     #pay_check_div {
-        margin-top: 18%;
-        margin-bottom: 26%;
+        /* margin-top: 18%; */
+        /* margin-bottom: 26%; */
     }
 
     @media max-width:
@@ -31,10 +31,12 @@ $OrderList = $Consumer->ListOrder();
 </style>
 <div class="container">
     <div class="row">
-        <table class="table table-bordered table-responsive table-condensed" id="pay_check_div">
+        <div style="margin-top: 23vh;"></div>
+        <h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">訂單查看</h3>
+        <table class="dataTable table table-bordered table-responsive table-condensed" id="pay_check_div">
             <thead>
             <tr>
-                <th colspan="6"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">訂單查看</h3></th>
+                <th colspan="6"></th>
             </tr>
             <tr style="background: #DDDDDD;">
                 <th style="text-align: center;">編號</th>
@@ -64,18 +66,20 @@ $OrderList = $Consumer->ListOrder();
                 <?php
             }
             ?>
+            <!--
             <tr align="right">
                 <td colspan="6">
                     <div class="container">
-                        <div class="row">
-                            <input type="button" class="btn btn-default" value="返回" onclick="go_back();">&nbsp;&nbsp;
-                            <!--                            <input type="button" class="btn btn-primary" value="兌換" id="pay_btn">-->
-                        </div>
                     </div>
                 </td>
             </tr>
+            -->
             </tbody>
         </table>
+        <div class="row" style="text-align: center;">
+            <input type="button" class="btn btn-default" value="返回" onclick="go_back();">&nbsp;&nbsp;
+        </div>
+        <div style="margin-bottom: 10vh;"
     </div>
 </div>
 
