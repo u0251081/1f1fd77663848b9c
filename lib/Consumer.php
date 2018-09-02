@@ -183,7 +183,7 @@ class Consumer extends Base17mai
 
     private function GetListInCart($member_no)
     {
-        $SQL = 'select b.PName, b.unitPrice, c.specification, a.Quantity, b.bonus from shoppingcart as a left join product as b on a.productID = b.id left join productspec as c on a.specCode = c.specCode and b.productID = c.productID where a.member_no = :member_no;';
+        $SQL = 'select b.PName, b.unitPrice, c.specification, a.Quantity, b.bonus, b.feedBack from shoppingcart as a left join product as b on a.productID = b.id left join productspec as c on a.specCode = c.specCode and b.productID = c.productID where a.member_no = :member_no;';
         $para['member_no'] = $member_no;
         $result = $this->PDOOperator($SQL, $para);
         if (!isset($result)) return false;
@@ -226,13 +226,17 @@ class Consumer extends Base17mai
 
     private function GetAmountInCart()
     {
-        $SQL = 'select Quantity, unitPrice from shoppingcart as a left join product as b on a.productID = b.id where member_no = :member_no;';
+        $SQL = 'select Quantity, unitPrice, bonus, feedBack from shoppingcart as a left join product as b on a.productID = b.id where member_no = :member_no;';
         $para['member_no'] = $this->MemberID;
         $rst = $this->PDOOperator($SQL, $para);
-        $result = 0;
+        $result = ['Total' => 0, 'bonus' => 0, 'feedBack' => 0];
         foreach ($rst as $key => $value) {
-            $tmp = (int)$value['Quantity'] * (int)$value['unitPrice'];
-            $result += $tmp;
+            $tmp1 = (int)$value['Quantity'] * (int)$value['unitPrice'];
+            $tmp2 = (int)$value['Quantity'] * (int)$value['bonus'];
+            $tmp3 = (int)$value['Quantity'] * (int)$value['unitPrice'] * (int)$value['feedBack'] / 100;
+            $result['Total'] += $tmp1;
+            $result['bonus'] += $tmp2;
+            $result['feedBack'] += $tmp3;
         }
         return $result;
     }
@@ -251,14 +255,16 @@ class Consumer extends Base17mai
             'member_no' => $member_id,
             'PayType' => $paymentChose,
             'PayTime' => $PayTime,
-            'Total' => $Total,
+            'Total' => $Total['Total'],
+            'bonus' => $Total['bonus'],
+            'feedBack' => $Total['feedBack'],
             'OrderTime' => $OrderTime
         );
         $setColumn = $this->GenerateSQLColumn(', ', $Para);
         $SQL = "insert into consumer_order set {$setColumn};";
         $result['OrderID'] = $this->PDOOperator($SQL, $Para, Base17mai::DO_INSERT_WITHID);
         $result['OrderNO'] = $OrderNO;
-        $result['Total'] = $Total;
+        $result['Total'] = $Total['Total'];
         $result['PayType'] = $paymentChose;
         $result['PayTime'] = $now->format('Y/m/d H:i:s');
         return $result;
@@ -273,7 +279,8 @@ class Consumer extends Base17mai
                 'specification' => $value['specification'],
                 'unitPrice' => $value['unitPrice'],
                 'Quantity' => $value['Quantity'],
-                'bonus' => $value['bonus']
+                'bonus' => $value['bonus'],
+                'feedBack' => $value['feedBack']
             );
             $setColumns = $this->GenerateSQLColumn(', ', $Para);
             $SQL = "insert into consumer_order_detail set {$setColumns};";
