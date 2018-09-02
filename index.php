@@ -1,4 +1,7 @@
 <?php
+date_default_timezone_set('Asia/Taipei'); //設定台北時區
+print 'DateTime: '.date('Y-m-d H:i:s');
+print "\n".'<br>'."\n";
 define('BaseSecurity', 'this is 17mai');
 session_start();
 require_once 'vendor/autoload.php';
