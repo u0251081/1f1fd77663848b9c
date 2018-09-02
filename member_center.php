@@ -33,7 +33,7 @@
                         <span class="member-icon-text">個人資料</span>
                     </td>
 
-                    <td class="cp tab-width" onclick="location.href='index.php?url=wishlist';">
+                    <td class="cp tab-width" onclick="location.href='index.php?url=TrackList';">
                         <div class="member-icon">
                             <img src="img/icon/heart.png">
                         </div>

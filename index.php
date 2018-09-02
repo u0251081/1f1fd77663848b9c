@@ -2,6 +2,7 @@
 define('BaseSecurity', 'this is 17mai');
 session_start();
 require_once 'vendor/autoload.php';
+require_once 'lib/toolFunc.php';
 require_once 'admin/mysql.php';
 $_SESSION['checkCode'] = BaseSecurity;
 sql();
@@ -17,6 +18,8 @@ print 'member_id: ' . $member_id;
 /*
  * 判斷登入的是電腦版還是手機版
  */
+$history = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'index.php';
+
 $_SESSION['device'] = checkUserAgent();
 $htm_para1 = '';
 $htm_para2 = '';
@@ -261,7 +264,7 @@ function checkPermissionRequire($url = '')
 {
     $permission = 'public';
     $memberRequirePages = ['member_center', 'member_info', 'wishlist', 'cart', 'bonus_search', 'bonus_use',
-        'order_search', 'to_manager', 'pay_check', 'order_detail'];
+        'order_search', 'to_manager', 'pay_check', 'order_detail', 'TrackList'];
     if (in_array($url, $memberRequirePages)) $permission = 'member';
     return $permission;
 }
@@ -367,7 +370,7 @@ function checkPermissionRequire($url = '')
             border-color: rgb(0, 0, 0);
             border-radius: 25px;
             font-size: 20px;
-            width: 200px;
+            min-width: 50px;
             height: 50px;
             color: #FFFFFF;
         }
@@ -676,6 +679,7 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
                     <input type="text" id="account" placeholder="帳號">
                     <label for="">密碼<span>*</span></label>
                     <input type="password" id="password" placeholder="密碼">
+                    <div id="MemberHint" style="display: none; color: red;">帳號或密碼錯誤</div>
                     <button class="aa-browse-btn" id="login_btn" type="button">登入</button>
                     <?php /* <button class="aa-browse-btn" id="fb_login_btn" type="button">fb登入</button> */ ?>
                     <p class="aa-lost-password"><a href="index.php?url=forget_password">忘記密碼?</a></p>

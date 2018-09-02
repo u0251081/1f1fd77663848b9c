@@ -1,4 +1,9 @@
 <?php
+
+define('BaseSecurity', 'this is 17mai');
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+$_SESSION['checkCode'] = BaseSecurity;
+
 include 'admin/mysql.php';
 sql();
 @$status = $_GET['status'];
