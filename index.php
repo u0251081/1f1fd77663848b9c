@@ -1,13 +1,15 @@
 <?php
 date_default_timezone_set('Asia/Taipei'); //設定台北時區
-print 'DateTime: '.date('Y-m-d H:i:s');
-print "\n".'<br>'."\n";
 define('BaseSecurity', 'this is 17mai');
 session_start();
+$_SESSION['checkCode'] = BaseSecurity;
 require_once 'vendor/autoload.php';
 require_once 'lib/toolFunc.php';
 require_once 'admin/mysql.php';
-$_SESSION['checkCode'] = BaseSecurity;
+
+use function Base17Mai\take;
+
+$dev_mode = true;
 sql();
 $member_id = '';
 /*
@@ -17,7 +19,12 @@ $member_id = '';
  */
 if (isset($_SESSION['fb_id'])) $member_id = $_SESSION['fb_id'];
 if (isset($_SESSION["member_no"])) $member_id = $_SESSION["member_no"];
-print 'member_id: ' . $member_id;
+$manager_no = take('manager_no', '', 'session');
+if ($dev_mode) :
+    print 'DateTime: ' . date('Y-m-d H:i:s') . "\n" . '<br>' . "\n";
+    print 'member_id: ' . $member_id . "\n" . '<br>' . "\n";
+    print 'manager_no: ' . $manager_no . "\n" . '<br>' . "\n";
+endif;
 /*
  * 判斷登入的是電腦版還是手機版
  */
@@ -362,7 +369,7 @@ function checkPermissionRequire($url = '')
                     from: 'bottom',
                     align: 'right'
                 },
-                delay:100
+                delay: 100
             });
         }
     </script>
@@ -716,10 +723,18 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
 <script type="text/javascript" src="js/nouislider.js"></script>
 <!-- Custom js -->
 <script src="js/custom.js"></script>
+
+<!-- DataTable -->
+<link rel="stylesheet" href="assets/vendor/DataTable/datatable-1.10.18.css">
+<script type="text/javascript" src="assets/vendor/DataTable/datatable-1.10.18.js"></script>
+
 </body>
 </html>
 
 <script type="text/javascript">
+    $(document).ready(function() {
+        $('table.dataTable').dataTable();
+    });
 
     $("#fb_login_btn").click(function () {
         function statusChangeCallback(response) {

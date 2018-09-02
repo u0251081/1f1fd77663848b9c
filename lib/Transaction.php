@@ -275,7 +275,7 @@ class Transaction extends Base17mai
 
     private function UpdateShoppingCart($OrderNO, $RtnCode = '1')
     {
-        $test = false;
+        $test = true;
         $status = $RtnCode === '1' ? true : false;
         if ($status === false) return false;
         $SQL = 'select * from consumer_order where OrderNO = :OrderNO;';

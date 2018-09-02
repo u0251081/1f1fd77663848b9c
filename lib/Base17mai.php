@@ -312,6 +312,18 @@ class Base17mai
         return $result;
     }
 
+    protected function MaskSecret($String = '')
+    {
+        $len = (int)(strlen($String) / 3);
+        $replacement = '';
+        $not = 3 - $len % 3;
+        $start = $len + $not % 3;
+        $start = $start > 6 ? 6 : $start;
+        for ($i = 0; $i < (int)(strlen($String) - $len * 2); $i++) $replacement .= '*';
+        $result = substr_replace($String, $replacement, (int)$start, -(int)$len);
+        return $result;
+    }
+
     private function breadcrumb()
     {
         ?>
