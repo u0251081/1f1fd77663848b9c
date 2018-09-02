@@ -2,10 +2,6 @@
 
 use Base17Mai\Consumer;
 
-print '<!--';
-print_r($_POST);
-print '-->';
-
 $share_data = array(
     'fb_no' => isset($_POST['fb_no']) ? $_POST['fb_no'] : '',
     'manager_id' => isset($_POST['manager_id']) ? $_POST['manager_id'] : '', //代表收到行銷經理分享=>綁定SESSION的分享的行銷經理id
