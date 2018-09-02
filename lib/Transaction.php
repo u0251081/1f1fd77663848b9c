@@ -117,11 +117,13 @@ class Transaction extends Base17mai
                 'VALUE' => $Parameter['SimulatePaid']          // 模擬交易flag，1為模擬交易，0為真實交易
             )
         );
-        $setColumns = $this->GenerateSQLColumn(', ',$Para);
+        $setColumns = $this->GenerateSQLColumn(', ', $Para);
         $SQL = "insert into order_return_information set {$setColumns}";
         $rst1 = $this->PDOOperator($SQL, $Para, Base17mai::DO_INSERT_NORMAL);
         $rst2 = $this->UpdateConsumerOrder($Parameter['RtnCode'], $Parameter['MerchantTradeNo']);
-        $result = $rst1 && $rst2;
+        $rst3 = $this->UpdateMemberRecord($Parameter['RtnCode'], $Parameter['MerchantTradeNo']);
+        $rst4 = $this->UpdateManagerRecord($Parameter['RtnCode'], $Parameter['MerchantTradeNo']);
+        $result = $rst1 && $rst2 && $rst3 && $rst4;
         return $result;
 
     }
@@ -140,4 +142,102 @@ class Transaction extends Base17mai
         $rst = $this->PDOOperator($SQL, $Para);
         return $rst;
     }
+
+    private function GetOrderByOrderNO($OrderNO = '')
+    {
+        $SQL = 'select * from consumer_order where OrderNO = :OrderNO;';
+        $Para['OrderNO'] = $OrderNO;
+        $rst = $this->PDOOperator($SQL, $Para);
+        return isset($rst[0]) ? $rst[0] : false;
+    }
+
+    private function UpdateMemberRecord($RtnCode, $OrderNO)
+    {
+        $status = $RtnCode === '1' ? true : false;
+        if ($status === false) return false;
+        $Order = $this->GetOrderByOrderNO($OrderNO);
+        if ($Order === false) return false;
+        // check record exists
+        $member_no = $Order['member_no'];
+        $ReMonth = substr($Order['PayTime'], 0, 7) . '-00';
+        $Para = array(
+            'member_no' => $member_no,
+            'ReMonth' => $ReMonth
+        );
+        $Table = 'record_member';
+        $check = $this->checkExistsDataInTable($Para, $Table);
+        // if record not exists, then create one
+        if ($check === false) {
+            $SQL = 'insert into record_member set member_no = :member_no, ReMonth = :ReMonth;';
+            $this->PDOOperator($SQL, $Para, Base17mai::DO_INSERT_NORMAL);
+        }
+        // get origin record
+        $SQL = 'select * from record_member where member_no = :member_no and ReMonth = :ReMonth;';
+        $rst = $this->PDOOperator($SQL, $Para);
+        if (!isset($rst[0])) return false;
+        $ReAmount = (int)$rst[0]['Amount'];
+        $ReBonus = (int)$rst[0]['bonus'];
+        // setup new record
+        $newAmount = (int)$ReAmount + (int)$Order['Total'];
+        $newBonus = (int)$ReBonus + (int)$Order['bonus'];
+        $Para['Amount'] = array(
+            'PARAM_TYPE' => Base17mai::PDO_PARSE_INT,
+            'VALUE' => $newAmount
+        );
+        $Para['bonus'] = array(
+            'PARAM_TYPE' => Base17mai::PDO_PARSE_INT,
+            'VALUE' => $newBonus
+        );
+        $SQL = 'update record_member set Amount = :Amount, bonus = :bonus where member_no = :member_no and ReMonth = :ReMonth;';
+        $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_UPDATE);
+        return $rst;
+    }
+
+    private function UpdateManagerRecord($RtnCode, $OrderNO)
+    {
+        $status = $RtnCode === '1' ? true : false;
+        if ($status === false) return false;
+        $Order = $this->GetOrderByOrderNO($OrderNO);
+        if ($Order === false) return false;
+        // get manager_no by parent_no
+        $SQL = 'select manager_no from member left join seller_manager on parent_no = seller_manager.member_id where member_no = :member_no;';
+        $Para['member_no'] = $Order['member_no'];
+        $rst = $this->PDOOperator($SQL, $Para);
+        $manager_no = isset($rst[0]) ? $rst[0]['manager_no'] : '';
+        // check record exists
+        if ($manager_no === '') return false;
+        $ReMonth = substr($Order['PayTime'], 0, 7) . '-00';
+        $Para = array(
+            'manager_no' => $manager_no,
+            'ReMonth' => $ReMonth
+        );
+        $Table = 'record_manager';
+        $check = $this->checkExistsDataInTable($Para, $Table);
+        // if record not exists, then create one
+        if ($check === false) {
+            $SQL = 'insert into record_manager set manager_no = :manager_no, ReMonth = :ReMonth;';
+            $this->PDOOperator($SQL, $Para, Base17mai::DO_INSERT_NORMAL);
+        }
+        // get origin record
+        $SQL = 'select * from record_manager where manager_no = :manager_no and ReMonth = :ReMonth;';
+        $rst = $this->PDOOperator($SQL, $Para);
+        if (!isset($rst[0])) return false;
+        $ReAmount = (int)$rst[0]['Amount'];
+        $ReBonus = (int)$rst[0]['bonus'];
+        // setup new record
+        $newAmount = (int)$ReAmount + (int)$Order['Total'];
+        $newBonus = (int)$ReBonus + (int)$Order['bonus'];
+        $Para['Amount'] = array(
+            'PARAM_TYPE' => Base17mai::PDO_PARSE_INT,
+            'VALUE' => $newAmount
+        );
+        $Para['bonus'] = array(
+            'PARAM_TYPE' => Base17mai::PDO_PARSE_INT,
+            'VALUE' => $newBonus
+        );
+        $SQL = 'update record_manager set Amount = :Amount, bonus = :bonus where manager_no = :manager_no and ReMonth = :ReMonth;';
+        $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_UPDATE);
+        return $rst;
+    }
+
 }
