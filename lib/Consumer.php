@@ -297,6 +297,68 @@ class Consumer extends Base17mai
         return $result;
     }
 
+    public function ListOrder()
+    {
+        $member_no = $this->MemberID;
+        $SQL = 'select OrderNO, OrderTime, Total, PayType, OrderStatus from consumer_order where member_no = :member_no;';
+        $Para['member_no'] = $member_no;
+        $rst = $this->PDOOperator($SQL, $Para);
+        foreach ($rst as $key => $item) {
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === null ? '訂單無效' : $rst[$key]['OrderStatus'];
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === '0' ? '尚未付款' : $rst[$key]['OrderStatus'];
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === '1' ? '完成付款' : $rst[$key]['OrderStatus'];
+            $rst[$key]['PayType'] = $item['PayType'] === 'Credit' ? '信用卡付款' : $rst[$key]['PayType'];
+            $rst[$key]['PayType'] = $item['PayType'] === 'CVS' ? '超商代碼付款' : $rst[$key]['PayType'];
+        }
+        return $rst;
+    }
+
+    public function OrderDetail($OrderNO)
+    {
+        $member_no = $this->MemberID;
+        $SQL = 'select id, OrderNO, OrderTime, PayType, Total, OrderOver, OrderStatus from consumer_order where member_no = :member_no and OrderNO = :OrderNO;';
+        $Para['member_no'] = $member_no;
+        $Para['OrderNO'] = $OrderNO;
+        $rst = $this->PDOOperator($SQL, $Para);
+        if (!isset($rst[0])) return false;
+        foreach ($rst as $key => $item) {
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === null ? '訂單無效' : $rst[$key]['OrderStatus'];
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === '0' ? '尚未付款' : $rst[$key]['OrderStatus'];
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === '1' ? '完成付款' : $rst[$key]['OrderStatus'];
+            $rst[$key]['PayType'] = $item['PayType'] === 'Credit' ? '信用卡付款' : $rst[$key]['PayType'];
+            $rst[$key]['PayType'] = $item['PayType'] === 'CVS' ? '超商代碼付款' : $rst[$key]['PayType'];
+            $rst[$key]['Detail'] = $this->GetOrderItem($item['id']);
+            $rst[$key]['Recipient'] = $this->GetRecipient($item['id']);
+            if ($item['PayType'] === 'CVS') $rst[$key]['PaymentInfo'] = $this->GetPaymentInfo($item['OrderNO']);
+        }
+        return $rst[0];
+    }
+
+    private function GetOrderItem($id)
+    {
+        $SQL = 'select * from consumer_order_detail where OrderID = :OrderID;';
+        $Para['OrderID'] = $id;
+        $rst = $this->PDOOperator($SQL, $Para);
+        return $rst;
+    }
+
+    private function GetRecipient($OrderID = '')
+    {
+        $SQL = 'select * from order_address where OrderID = :OrderID;';
+        $Para['OrderID'] = $OrderID;
+        $rst = $this->PDOOperator($SQL, $Para);
+        return isset($rst[0]) ? $rst[0] : false;
+    }
+
+    private function GetPaymentInfo($OrderNO = '')
+    {
+        $SQL = 'select PaymentNo from order_cvs_information where OrderNO = :OrderNO;';
+        $Para['OrderNO'] = $OrderNO;
+        $rst = $this->PDOOperator($SQL, $Para);
+        $result = isset($rst[0]) ? $rst[0]['PaymentNo'] : '訂單無效，沒有代碼';
+        return $result;
+    }
+
 }
 
 ?>
