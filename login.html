@@ -161,6 +161,7 @@
 -->
 <script>
     var action = 'login';
+    var BaseSecurity = 'c0bc58e005f4fbb0';
 
     function setFormToLogin() {
         $('.btn1').text('登 入');
@@ -202,7 +203,7 @@
     function getIMEI(i, r) {
         imei = i;
         regid = r;
-        SetCookie('imei',imei);
+        SetCookie('imei', imei);
     }
 
     function showMessage(message = '') {
@@ -218,11 +219,17 @@
         let email_reg = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
         let reg_password = $("#inputPassword").val();
         let method = '';
-        if (reg_mail != "" && reg_password != "") {
-            if (!email_reg.test(reg_mail)) {
+        if (true || (reg_mail != "" && reg_password != "")) {
+            if (false || (!email_reg.test(reg_mail))) {
                 showMessage('請輸入正確的email格式');
             } else {
-                let postData = {account: reg_mail, password: reg_password, imei: imei, regid: regid};
+                let postData = {
+                    account: reg_mail,
+                    password: reg_password,
+                    imei: imei,
+                    regid: regid,
+                    BaseSecurity: BaseSecurity
+                };
                 switch (action) {
                     case 'login':
                         method = 'Login';
