@@ -674,7 +674,7 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
             <div class="modal-body">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4>登入</h4>
-                <form class="aa-login-form">
+                <form id="login_form" class="aa-login-form">
                     <label for="">帳號<span>*</span></label>
                     <input type="text" id="account" placeholder="帳號">
                     <label for="">密碼<span>*</span></label>
@@ -833,9 +833,8 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
         return false;
     });
 
-    $(document).on('keypress', 'form.aa-login-form', function (event) {
+    $(document).on('keypress', 'form#login_form', function (event) {
         if (event.which === 13) $('#login_btn').click();
-
     });
 
     $(function () {
