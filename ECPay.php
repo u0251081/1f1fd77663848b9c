@@ -6,13 +6,14 @@
  * Time: 下午 09:34
  */
 
+date_default_timezone_set('Asia/Taipei'); //設定台北時區
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
 require_once 'vendor/autoload.php';
 require_once 'lib/toolFunc.php';
 require_once 'lib/AllPay.Payment.Integration.php';
 
-use Base17Mai\Consumer;
+use Base17Mai\Consumer, Base17Mai\Transaction;
 use function Base17Mai\take;
 
 $MemberID = take('member_no', '', 'session');

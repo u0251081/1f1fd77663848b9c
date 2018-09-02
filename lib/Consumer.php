@@ -183,7 +183,7 @@ class Consumer extends Base17mai
 
     private function GetListInCart($member_no)
     {
-        $SQL = 'select b.PName, b.unitPrice, c.specification, a.Quantity, b.bonus, b.feedBack from shoppingcart as a left join product as b on a.productID = b.id left join productspec as c on a.specCode = c.specCode and b.productID = c.productID where a.member_no = :member_no;';
+        $SQL = 'select b.PName, b.unitPrice, c.productID, c.specCode, c.specification, a.Quantity, b.bonus, b.feedBack from shoppingcart as a left join product as b on a.productID = b.id left join productspec as c on a.specCode = c.specCode and b.productID = c.productID where a.member_no = :member_no;';
         $para['member_no'] = $member_no;
         $result = $this->PDOOperator($SQL, $para);
         if (!isset($result)) return false;
@@ -276,7 +276,9 @@ class Consumer extends Base17mai
             $Para = array(
                 'OrderID' => $OrderID,
                 'PName' => $value['PName'],
+                'productID' => $value['productID'],
                 'specification' => $value['specification'],
+                'specCode' => $value['specCode'],
                 'unitPrice' => $value['unitPrice'],
                 'Quantity' => $value['Quantity'],
                 'bonus' => $value['bonus'],

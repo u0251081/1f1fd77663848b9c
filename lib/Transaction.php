@@ -17,7 +17,6 @@ class Transaction extends Base17mai
     public function PaymentInfo($Parameter = [])
     {
         $PaymentType = $Parameter['PaymentType'];     // 付款方式
-        writeContent('TransactionLog', 'PaymentType: ' . $PaymentType, 'append');
         $this->PaymentInformationCommon($Parameter);
         preg_match('/(Credit)/', $PaymentType, $CreTest);
         preg_match('/(ATM)/', $PaymentType, $ATMTest);
@@ -30,19 +29,17 @@ class Transaction extends Base17mai
         $OrderStatus = 0;
         switch ($PaymentType) {
             case 'ATM':
-                writeContent('TransactionLog', 'Get to ATM' . "\n", 'append');
                 $result = $this->PaymentInformationInATM($Parameter);
                 break;
             case 'BARCODE':
             case 'CVS':
-                writeContent('TransactionLog', 'Get to CVS and Barcode' . "\n", 'append');
+                $this->UpdateShoppingCart($Parameter['MerchantTradeNo']);
                 $result = $this->PaymentInformationInCVSAndBarcode($Parameter);
                 break;
             case 'Credit':
                 $result = $this->PaymentInformationInCredit($Parameter);
                 break;
             default:
-                writeContent('TransactionLog', 'Get to default', 'append');
                 $result = false;
                 break;
         }
@@ -105,7 +102,6 @@ class Transaction extends Base17mai
 
     public function PaymentReturn($Parameter = [])
     {
-        writeContent('TransactionLog', 'Get to PaymentReturn', 'append');
         $Para = array(
             'OrderNO' => $Parameter['MerchantTradeNo'],        // 特店交易編號
             'TradeNO' => $Parameter['TradeNo'],                // 綠界的交易編號
@@ -123,7 +119,9 @@ class Transaction extends Base17mai
         $rst2 = $this->UpdateConsumerOrder($Parameter['RtnCode'], $Parameter['MerchantTradeNo']);
         $rst3 = $this->UpdateMemberRecord($Parameter['RtnCode'], $Parameter['MerchantTradeNo']);
         $rst4 = $this->UpdateManagerRecord($Parameter['RtnCode'], $Parameter['MerchantTradeNo']);
-        $result = $rst1 && $rst2 && $rst3 && $rst4;
+        $rst5 = $this->UpdateProduct($Parameter['RtnCode'], $Parameter['MerchantTradeNo']);
+        if ($Parameter['PaymentType'] === 'Credit') $this->UpdateShoppingCart($Parameter['MerchantTradeNo'], $Parameter['RtnCode']);
+        $result = $rst1 && $rst2 && $rst3 && $rst4 && $rst5;
         return $result;
 
     }
@@ -149,6 +147,14 @@ class Transaction extends Base17mai
         $Para['OrderNO'] = $OrderNO;
         $rst = $this->PDOOperator($SQL, $Para);
         return isset($rst[0]) ? $rst[0] : false;
+    }
+
+    private function GetOrderDetail($OrderID = '')
+    {
+        $SQL = 'select * from consumer_order_detail where OrderID = :OrderID;';
+        $Para['OrderID'] = $OrderID;
+        $rst = $this->PDOOperator($SQL, $Para);
+        return $rst;
     }
 
     private function UpdateMemberRecord($RtnCode, $OrderNO)
@@ -238,6 +244,50 @@ class Transaction extends Base17mai
         $SQL = 'update record_manager set Amount = :Amount, bonus = :bonus where manager_no = :manager_no and ReMonth = :ReMonth;';
         $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_UPDATE);
         return $rst;
+    }
+
+    private function UpdateProduct($RtnCode, $OrderNO)
+    {
+        $status = $RtnCode === '1' ? true : false;
+        if ($status === false) return false;
+        $Order = $this->GetOrderByOrderNO($OrderNO);
+        $Order['Detail'] = $this->GetOrderDetail($Order['id']);
+        if ($Order === false) return false;
+        if ($Order['Detail'] === false) return false;
+        foreach ($Order['Detail'] as $item) {
+            $SQL = 'update productspec set Quantity = Quantity - :Quantity where productID = :productID and specCode = :specCode;';
+            $Para = array(
+                'productID' => $item['productID'],
+                'specCode' => $item['specCode'],
+                'Quantity' => $item['Quantity']
+            );
+            $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_UPDATE);
+            $SQL = 'update product set QuantityRemain = QuantityRemain - :Quantity where productID = :productID;';
+            $Para = array(
+                'productID' => $item['productID'],
+                'Quantity' => $item['Quantity']
+            );
+            $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_UPDATE);
+        }
+        $result = true;
+        return $result;
+    }
+
+    private function UpdateShoppingCart($OrderNO, $RtnCode = '1')
+    {
+        $test = false;
+        $status = $RtnCode === '1' ? true : false;
+        if ($status === false) return false;
+        $SQL = 'select * from consumer_order where OrderNO = :OrderNO;';
+        $Para = ['OrderNO' => $OrderNO];
+        $rst1 = $this->PDOOperator($SQL, $Para);
+        if (!isset($rst1[0])) return false;
+        $SQL = 'delete from shoppingcart where member_no = :member_no;';
+        $Para = ['member_no' => $rst1[0]['member_no']];
+        if (!$test) $rst2 = $this->PDOOperator($SQL, $Para, Base17mai::DO_DELETE);
+        if (!isset($rst2[0])) return false;
+        $result = true;
+        return $result;
     }
 
 }

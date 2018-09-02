@@ -6,6 +6,7 @@
  * Time: 下午 06:31
  */
 
+date_default_timezone_set('Asia/Taipei'); //設定台北時區
 require_once 'vendor/autoload.php';
 require_once 'lib/toolFunc.php';
 require_once 'lib/AllPay.Payment.Integration.php';
