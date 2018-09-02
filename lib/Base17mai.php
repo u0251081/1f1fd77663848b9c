@@ -135,12 +135,28 @@ class Base17mai
         return $result;
     }
 
+    protected function GenerateSQLColumn($GLUE = ', ', $Parameter = [], $isCondition = false)
+    {
+        if (is_array($Parameter)) {
+            $rst = [];
+            foreach ($Parameter as $key => $value) {
+                if (isset($valeu['PARAM_TYPE']) && $value['VALUE'] === null && $isCondition) $rst[] = $key . ' is :' . $key;
+                else $rst[] = $key . ' = :' . $key;
+            }
+            $result = implode($GLUE, $rst);
+            return $result;
+        } else {
+            return false;
+        }
+    }
+
     protected function checkExistsDataInTable($Parameter = Array(), $Table = '')
     {
         if (is_array($Parameter) && !empty($Parameter) && strlen($Table) > 0) {
             $condition = array();
             foreach ($Parameter as $key => $value) {
-                $condition[] = $key . ' = :' . $key;
+                if (isset($value['PARAM_TYPE']) && $value['VALUE'] === null) $condition[] = $key . ' is :' . $key;
+                else $condition[] = $key . ' = :' . $key;
             }
             $conditionSQL = implode(' and ', $condition);
             $SQL = "select count(*) as chk from {$Table} where {$conditionSQL};";

@@ -8,6 +8,8 @@
 
 namespace Base17Mai;
 
+require_once 'toolFunc.php';
+
 use Base17Mai\Bank;
 
 class Member extends Base17mai
@@ -17,7 +19,7 @@ class Member extends Base17mai
     public function __construct()
     {
         parent::__construct();
-        if (isset($_SESSION['member_no'])) $this->memberNO = $_SESSION['member_no'];
+        if (isset($_SESSION['member_no'])) $this->memberNO = &$_SESSION['member_no'];
     }
 
     public function CreateNewMember($account = '', $password = '')
@@ -60,7 +62,7 @@ class Member extends Base17mai
                 $num = rand(0, 9);
                 $member_no .= $num;
             }
-        } while (!$this->checkMemberNoRepeat($member_no));
+        } while ($member_no[0] === '0' || !$this->checkMemberNoRepeat($member_no));
         return $member_no;
     }
 
@@ -74,7 +76,7 @@ class Member extends Base17mai
 
     private function checkFavorite($member_no, $productID)
     {
-        $para = ['memberNO' => $member_no, 'productID' => $productID];
+        $para = ['member_no' => $member_no, 'productID' => $productID];
         $table = 'producttrack';
         $rst = $this->checkExistsDataInTable($para, $table);
         return $rst;
@@ -82,15 +84,15 @@ class Member extends Base17mai
 
     private function removeFromTrack($member_no, $productID)
     {
-        $SQL = "delete from producttrack where memberNO = '{$member_no}' and productID = '{$productID}';";
+        $SQL = "delete from producttrack where member_no = '{$member_no}' and productID = '{$productID}';";
         $result = $this->PDOOperator($SQL, [], Base17mai::DO_DELETE);
         return $result;
     }
 
     private function addToTrack($member_no, $productID)
     {
-        $SQL = "insert into producttrack set memberNO = :memberNO, productID = :productID;";
-        $para = ['memberNO' => $member_no, 'productID' => $productID];
+        $SQL = "insert into producttrack set member_no = :member_no, productID = :productID;";
+        $para = ['member_no' => $member_no, 'productID' => $productID];
         $result = $this->PDOOperator($SQL, $para, Base17mai::DO_INSERT_NORMAL);
         return $result;
     }
@@ -577,6 +579,20 @@ class Member extends Base17mai
         return $result;
     }
 
+    private function AddToCart($member_id, $productID, $Quantity)
+    {
+        $status = $this->checkCartStatus($mid, $pid);
+        if ($status) {
+            $SQL = 'update shoppingcart set Quantity = Quantity + :Quantity where member_no = :member_id and productID = :productID;';
+            $para = ['member_id' => $mid, 'productID' => $pid, 'Quantity' => ['PARAM_TYPE' => Base17mai::PDO_PARSE_INT, 'VALUE' => $Quantity]];
+            $result = $this->PDOOperator($SQL, $para, Base17mai::DO_UPDATE);
+        } else {
+            $SQL = 'insert into shoppingcart set member_no = :member_id, productID = :productID, Quantity = :Quantity;';
+            $para = ['member_id' => $mid, 'productID' => $pid, 'Quantity' => ['PARAM_TYPE' => Base17mai::PDO_PARSE_INT, 'VALUE' => $Quantity]];
+            $result = $this->PDOOperator($SQL, $para, Base17mai::DO_INSERT_NORMAL);
+        }
+    }
+
     public function ajaxCreateAccount($get, $post)
     {
         $account = addslashes($post['account']);
@@ -613,12 +629,15 @@ class Member extends Base17mai
         $account = addslashes($post['account']);
         $password = addslashes($post['password']);
         $result = $this->Login($account, $password);
-        if (isset($post['imei']) && strlen($post['imei']) === 15)
+        if ($result && isset($post['imei']) && strlen($post['imei']) === 15)
             $this->UpdateIMEI($post['imei'], $post['regid']);
         if ($result) {
+            $javascript .= '$(\'#MemberHint\').hide(1000);';
+            $javascript .= '$(\'#login-modal\').modal(\'hide\');';
             $javascript .= 'showMessage(\'登入成功\');';
             $javascript .= 'location.href = \'index.php\';';
         } else {
+            $javascript .= '$(\'#MemberHint\').show(1000);';
             $javascript .= 'showMessage(\'帳號或密碼錯誤\');';
         }
         $output = array('javascript' => $javascript);
@@ -654,19 +673,28 @@ class Member extends Base17mai
     {
         $mid = addslashes($post['memberNO']);
         $pid = addslashes($post['productID']);
+        if ($mid === '') $this->PAE(['javascript' => 'showMessage("請先登入方可使用本功能");']);
         $status = $this->checkFavorite($mid, $pid);
         if ($status) {
-            $this->removeFromTrack($mid, $pid);
-            $this->PAE(['javascript' => 'showMessage("取消追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/clean.png");']);
+            $rst = $this->removeFromTrack($mid, $pid);
+            if ($rst) $this->PAE(['javascript' => 'showMessage("取消追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/clean.png");']);
         } else {
-            $this->addToTrack($mid, $pid);
-            $this->PAE(['javascript' => 'showMessage("完成追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/add.png");']);
+            $rst = $this->addToTrack($mid, $pid);
+            if ($rst) $this->PAE(['javascript' => 'showMessage("完成追蹤");$("a#fav_btn' . $pid . '").find("img").attr("src","img/icon/add.png");']);
         }
+    }
+
+    public function ajaxRemoveTrack($get, $post)
+    {
+        $member_no = addslashes(take('member_no', '', 'session'));
+        $productID = addslashes(take('productID', '', 'post'));
+        $result = $this->removeFromTrack($member_no, $productID);
+        if ($result) $this->PAE(['javascript' => 'showMessage("成功取消追蹤"); $(\'a#'.$productID.'\').closest(\'tr\').remove();']);
     }
 
     public function checkTrackStatus($mid, $pid)
     {
-        $para = ['memberNO' => $mid, 'productID' => $pid];
+        $para = ['member_no' => $mid, 'productID' => $pid];
         $table = 'producttrack';
         $rst = $this->checkExistsDataInTable($para, $table);
         $result = "<a id=\"fav_btn{$pid}\" href=\"javascript:void(0);\" onclick=\"favorite({$pid});\">";
@@ -677,6 +705,40 @@ class Member extends Base17mai
         }
         $result .= "</a>";
         return $result;
+    }
+
+    public function ajaxAddToCart($get, $post)
+    {
+        $mid = addslashes($post['member_id']);
+        $pid = addslashes($post['productID']);
+        $Quantity = addslashes($post['Quantity']);
+        if ($mid === '') $this->PAE(['javascript' => 'showMessage("請先登入方可使用本功能");']);
+        $result = $this->AddToCart($mid, $pid, $Quantity);
+        if ($result) $this->PAE(['javascript' => 'showMessage("成功加入購物車");']);
+        else $this->PAE(['javascript' => 'showMessage("加入購物車失敗");']);
+    }
+
+    private function checkCartStatus($mid, $pid)
+    {
+        $para = ['productID' => $pid, 'member_no' => $mid];
+        $table = 'shoppingcart';
+        $rst = $this->checkExistsDataInTable($para, $table);
+        return $rst;
+    }
+
+    public function listCart($member_id = '')
+    {
+        $SQL = '';
+        $SQL .= 'select a.productID as id, PName, unitPrice, Quantity , Prelease from shoppingcart as a';
+        $SQL .= ' left join product as b on a.productID = b.id where member_no = :member_id;';
+        $para = ['member_id' => addslashes($member_id)];
+        $rst = $this->PDOOperator($SQL, $para);
+        print_r($rst);
+        if (!isset($rst[0])) return null;
+        foreach ($rst as $key => $value) {
+            $rst[$key]['Prelease'] = ($rst[$key]['Prelease'] === '1') ? '上架' : '下架';
+        }
+        return $rst;
     }
 
 }

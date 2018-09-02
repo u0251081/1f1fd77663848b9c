@@ -69,3 +69,28 @@ function take($index = false, $default = '', $type = 'GET')
 
     return $target;
 }
+
+function writeContent($FileName = '', $WriteContent = '', $type = 'write')
+{
+    switch ($type) {
+        case 'write':
+        default:
+            $handler = fopen($FileName, 'w+');
+            break;
+        case 'append':
+            $handler = fopen($FileName, 'a+');
+            break;
+    }
+
+    $result = fwrite($handler, $WriteContent."\n");
+    fclose($handler);
+    return $result;
+    /*
+    if ($result === false) print 'some error is occur' . "\n";
+    else print "\n" . $result . ' byte has been written' . "\n";
+    rewind($handler); // 重置指標
+    print 'check file content ...' . "\n";
+    $content = fread($handler, filesize(FileName));
+    print $content . "\n";
+    */
+}
