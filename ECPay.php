@@ -60,7 +60,7 @@ function CreateECOrder($options)
 
     /*產生訂單範例*/
     try {
-        $test = true;
+        $test = false;
         $ECPay = new AllInOne();
         /* 服務參數 */
         $ECPay->ServiceURL = 'https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5';  // 測試環境網址，正式版的話要改為正式環境

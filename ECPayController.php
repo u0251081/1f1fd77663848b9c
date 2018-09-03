@@ -24,7 +24,7 @@ $command = isset($_GET['Return']) ? 'Return' : $command;
 
 function GetECBackInformation()
 {
-    $test = true;
+    $test = false;
     try {
         $ECPay = new AllInOne();
         /* 服務參數 */
