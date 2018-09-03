@@ -9,7 +9,7 @@ require_once 'admin/mysql.php';
 
 use function Base17Mai\take;
 
-$dev_mode = true;
+$dev_mode = false;
 sql();
 $member_id = '';
 /*

@@ -700,7 +700,7 @@ class Member extends Base17mai
         $member_no = addslashes(take('member_no', '', 'session'));
         $productID = addslashes(take('productID', '', 'post'));
         $result = $this->removeFromTrack($member_no, $productID);
-        if ($result) $this->PAE(['javascript' => 'showMessage("成功取消追蹤"); $(\'a#'.$productID.'\').closest(\'tr\').remove();']);
+        if ($result) $this->PAE(['javascript' => 'showMessage("成功取消追蹤"); $(\'a#' . $productID . '\').closest(\'tr\').remove();']);
     }
 
     public function checkTrackStatus($mid, $pid)
@@ -749,6 +749,22 @@ class Member extends Base17mai
         foreach ($rst as $key => $value) {
             $rst[$key]['Prelease'] = ($rst[$key]['Prelease'] === '1') ? '上架' : '下架';
         }
+        return $rst;
+    }
+
+    public function GetRecord($member_no, $startDate = '', $endDate = '')
+    {
+        $now = date('Y-m').'-00';
+        if ($startDate < $endDate) {
+            $tmp = $startDate;
+            $startDate = $endDate;
+            $endDate = $tmp;
+        }
+        $SQL = "select * from record_member where member_no = :member_no and ReMonth >= :startMonth and ReMonth <= :endMonth;";
+        $Para['member_no'] = $member_no;
+        $Para['startMonth'] = $startDate === '' ? $now:$startDate;
+        $Para['endMonth'] = $endDate === '' ? $now:$endDate;
+        $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_SELECT);
         return $rst;
     }
 
