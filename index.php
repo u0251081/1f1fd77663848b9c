@@ -1,10 +1,15 @@
 <?php
+date_default_timezone_set('Asia/Taipei'); //設定台北時區
 define('BaseSecurity', 'this is 17mai');
 session_start();
+$_SESSION['checkCode'] = BaseSecurity;
 require_once 'vendor/autoload.php';
 require_once 'lib/toolFunc.php';
 require_once 'admin/mysql.php';
-$_SESSION['checkCode'] = BaseSecurity;
+
+use function Base17Mai\take;
+
+$dev_mode = true;
 sql();
 $member_id = '';
 /*
@@ -14,7 +19,12 @@ $member_id = '';
  */
 if (isset($_SESSION['fb_id'])) $member_id = $_SESSION['fb_id'];
 if (isset($_SESSION["member_no"])) $member_id = $_SESSION["member_no"];
-print 'member_id: ' . $member_id;
+$manager_no = take('manager_no', '', 'session');
+if ($dev_mode) :
+    print 'DateTime: ' . date('Y-m-d H:i:s') . "\n" . '<br>' . "\n";
+    print 'member_id: ' . $member_id . "\n" . '<br>' . "\n";
+    print 'manager_no: ' . $manager_no . "\n" . '<br>' . "\n";
+endif;
 /*
  * 判斷登入的是電腦版還是手機版
  */
@@ -359,7 +369,7 @@ function checkPermissionRequire($url = '')
                     from: 'bottom',
                     align: 'right'
                 },
-                delay:100
+                delay: 100
             });
         }
     </script>
@@ -674,11 +684,12 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
             <div class="modal-body">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4>登入</h4>
-                <form class="aa-login-form">
+                <form id="login_form" class="aa-login-form">
                     <label for="">帳號<span>*</span></label>
                     <input type="text" id="account" placeholder="帳號">
                     <label for="">密碼<span>*</span></label>
                     <input type="password" id="password" placeholder="密碼">
+                    <div id="MemberHint" style="display: none; color: red;">帳號或密碼錯誤</div>
                     <button class="aa-browse-btn" id="login_btn" type="button">登入</button>
                     <?php /* <button class="aa-browse-btn" id="fb_login_btn" type="button">fb登入</button> */ ?>
                     <p class="aa-lost-password"><a href="index.php?url=forget_password">忘記密碼?</a></p>
@@ -712,10 +723,18 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
 <script type="text/javascript" src="js/nouislider.js"></script>
 <!-- Custom js -->
 <script src="js/custom.js"></script>
+
+<!-- DataTable -->
+<link rel="stylesheet" href="assets/vendor/DataTable/datatable-1.10.18.css">
+<script type="text/javascript" src="assets/vendor/DataTable/datatable-1.10.18.js"></script>
+
 </body>
 </html>
 
 <script type="text/javascript">
+    $(document).ready(function() {
+        $('table.dataTable').dataTable();
+    });
 
     $("#fb_login_btn").click(function () {
         function statusChangeCallback(response) {
@@ -832,9 +851,8 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
         return false;
     });
 
-    $(document).on('keypress', 'form.aa-login-form', function (event) {
+    $(document).on('keypress', 'form#login_form', function (event) {
         if (event.which === 13) $('#login_btn').click();
-
     });
 
     $(function () {

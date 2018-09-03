@@ -152,7 +152,7 @@ function bottom_btn($total = 0)
     if ($total < 30) {
         $html .= '<input type="button" class="btn btn-default" value="返回" onclick="window.history.back(-1);">&nbsp;&nbsp;';
     } else {
-        $html .= '<input type="checkbox" id="for_member_info"><label for="for_member_info">同會員資料</label>&nbsp;&nbsp;';
+        $html .= '<label for="for_member_info"><input type="checkbox" id="for_member_info">同會員資料</label>&nbsp;&nbsp;';
         $html .= '<input type="button" class="btn btn-default" value="返回" onclick="window.history.back(-1);">&nbsp;&nbsp;';
         $html .= '<input type="button" class="btn btn-primary" value="結帳" id="pay_btn">';
     }
@@ -179,65 +179,67 @@ $bottom_button = bottom_btn($total);
         }
     }
 </style>
-<div class="container" id="pay_check_div">
-    <div class="row">
-        <table class="table table-bordered table-responsive table-condensed">
-            <thead>
-            <tr>
-                <th colspan="5"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">再次確認購買!</h3>
-                </th>
-            </tr>
-            <tr style="background: #DDDDDD;">
-                <th style="text-align: center;">商品名稱</th>
-                <th style="text-align: center;">價格</th>
-                <th style="text-align: center;">規格</th>
-                <th style="text-align: center;">數量</th>
-                <th colspan="4" style="text-align: center;">小計</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?= $tbody ?>
-            <tr>
-                <th colspan="5"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">收件人資料</h3></th>
-            </tr>
-            <tr style="background: #DDDDDD;">
-                <th>姓名</th>
-                <th>電話</th>
-                <th>地址</th>
-                <th>宅配日期</th>
-                <th>付款方式</th>
-            </tr>
-            <tr>
-                <td><input type="text" name="addressee_name" class="form-control"></td>
-                <td><input type="text" name="cellphone" class="form-control"></td>
-                <td><input type="text" name="address" class="form-control"></td>
-                <td>
-                    <select name="addressee_date" class="form-control">
-                        <option value="1">周一至周五</option>
-                        <option value="2">周六</option>
-                        <option value="3">不指定</option>
-                    </select>
-                </td>
-                <td>
-                    <select name="paymentchose" class="form-control">
-                        <option value="Credit">信用卡</option>
-                        <option value="CVS">超商代碼繳費</option>
-                    </select>
-                </td>
-            </tr>
-            <tr align="right">
-                <td colspan="5">
-                    <div class="container">
-                        <div class="row">
-                            <?= $bottom_button ?>
+<form action="ECPay.php" method="post" id="send_order">
+    <div class="container" id="pay_check_div">
+        <div class="row">
+            <table class="table table-bordered table-responsive table-condensed">
+                <thead>
+                <tr>
+                    <th colspan="5"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">再次確認購買!</h3>
+                    </th>
+                </tr>
+                <tr style="background: #DDDDDD;">
+                    <th style="text-align: center;">商品名稱</th>
+                    <th style="text-align: center;">價格</th>
+                    <th style="text-align: center;">規格</th>
+                    <th style="text-align: center;">數量</th>
+                    <th colspan="4" style="text-align: center;">小計</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?= $tbody ?>
+                <tr>
+                    <th colspan="5"><h3 style="font-family: '微軟正黑體'; font-weight: bold; color: #d62408;">收件人資料</h3></th>
+                </tr>
+                <tr style="background: #DDDDDD;">
+                    <th>姓名</th>
+                    <th>電話</th>
+                    <th>地址</th>
+                    <th>宅配日期</th>
+                    <th>付款方式</th>
+                </tr>
+                <tr>
+                    <td><input type="text" name="Recipient" class="form-control"></td>
+                    <td><input type="text" name="CellPhone" class="form-control"></td>
+                    <td><input type="text" name="Address" class="form-control"></td>
+                    <td>
+                        <select name="DateType" class="form-control">
+                            <option value="1">周一至周五</option>
+                            <option value="2">周六</option>
+                            <option value="3">不指定</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="paymentChose" class="form-control">
+                            <option value="Credit">信用卡</option>
+                            <option value="CVS">超商代碼繳費</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr align="right">
+                    <td colspan="5">
+                        <div class="container">
+                            <div class="row">
+                                <?= $bottom_button ?>
+                            </div>
                         </div>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
+</form>
 <script>
 
     $(function () {
@@ -245,26 +247,31 @@ $bottom_button = bottom_btn($total);
     });
 
     $("#pay_btn").click(function () {
-        var addressee_name = $("input[name='addressee_name']").val();
-        var cellphone = $("input[name='cellphone']").val();
-        var address = $("input[name='address']").val();
-        var addressee_date = $("input[name='addressee_date']").val();
-        var mobile_num_reg = /^[09]{2}[0-9]{8}$/;
-        if (addressee_name != '' && cellphone != "" && addressee_date != "" && address != "") {
+        if (checkInput()) $("form#send_order").submit(/*test_submit()*/);
+    });
+
+    function checkInput() {
+        let addressee_name = $("input[name='Recipient']").val();
+        let cellphone = $("input[name='CellPhone']").val();
+        let address = $("input[name='Address']").val();
+        let addressee_date = $("input[name='DateType']").val();
+        let mobile_num_reg = /^09[0-9]{8}$/;
+        if (addressee_name !== '' && cellphone !== "" && addressee_date !== "" && address !== "") {
             if (!mobile_num_reg.test(cellphone)) {
                 alert('手機號碼格式錯誤');
-            }
-            else {
-                $("form#send_oder").submit(test_submit());
+                return false;
+            } else {
+                return true;
             }
         }
         else {
             alert('請確認收件人資料是否填寫完整');
+            return false;
         }
-    });
+    }
 
     function test_submit() {
-        var e = $("form#send_oder");
+        var e = $("form#send_order");
         var url = e.attr('action');
         var method = e.attr('method');
         var formdata = e.serialize();
@@ -280,6 +287,9 @@ $bottom_button = bottom_btn($total);
     }
 
     $("#for_member_info").click(function () {
+        let Recipient = $("input[name='Recipient']");
+        let CellPhone = $("input[name='CellPhone']");
+        let Address = $("input[name='Address']");
         var m_id = $("#m_id").text();
         if ($(this).is(':checked')) {
             if (m_id) {
@@ -291,9 +301,9 @@ $bottom_button = bottom_btn($total);
                     dataType: "json",
                     success: function (i) {
                         $.each(i, function (key, item) {
-                            $("input[name='addressee_name']").val(item['m_name']);
-                            $("input[name='cellphone']").val(item['cellphone']);
-                            $("input[name='address']").val(item['address']);
+                            Recipient.val(item['m_name']);
+                            CellPhone.val(item['cellphone']);
+                            Address.val(item['address']);
                         });
                     },
                     error: function () {
@@ -303,9 +313,9 @@ $bottom_button = bottom_btn($total);
             }
         }
         else {
-            $("input[name='addressee_name']").val('');
-            $("input[name='cellphone']").val('');
-            $("input[name='address']").val('');
+            Recipient.val('');
+            CellPhone.val('');
+            Address.val('');
         }
     });
 </script>

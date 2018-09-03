@@ -119,7 +119,7 @@ class Administrator extends Base17mai
             $javascript .= 'window.location.href = "home.php";';
         } else {
             $javascript = 'alert("帳號或密碼錯誤");';
-            $javascript .= '$("input").val("");';
+            $javascript .= '$("input[name!=\"btn\"]").val("");';
         }
         $output = ['javascript' => $javascript];
         $this->PAE($output);

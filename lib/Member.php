@@ -208,6 +208,17 @@ class Member extends Base17mai
         return $result;
     }
 
+    private function getManagerName($MemberNO = false)
+    {
+        if ($MemberNO === false) $result = 'no this member';
+        else {
+            $sql = "select m_name from member left join seller_manager on member_no = member_id where member_no = '{$MemberNO}' and apply_status = '1';";
+            $result = $this->PDOOperator($sql);
+            $result = isset($result[0]['m_name']) ? $result[0]['m_name'] : 'no this member';
+        }
+        return $result;
+    }
+
     private function checkInput(&$receive = false)
     {
         if ($receive === false) {
@@ -246,7 +257,7 @@ class Member extends Base17mai
                     // doing nothing cause it could be empty
                 } else {
                     $parentNO = $receive['parent_number'];
-                    $memberExists = $this->checkMemberExists($parentNO);
+                    $memberExists = $this->checkManagerExists($parentNO);
                     if (!$memberExists) return 601;
                     if ($receive['parent_number'] === $this->memberNO) return 602;
                 }
@@ -300,8 +311,8 @@ class Member extends Base17mai
             if (empty($receive['cellphone'])) {
                 return 700;
             } else {
-                $processed = preg_replace('/\W/', '', $receive['cellphone']);
-                preg_match('/^\d{9,10}$/', $processed, $chk);
+                $receive['cellphone'] = preg_replace('/\W/', '', $receive['cellphone']);
+                preg_match('/^\d{9,10}$/', $receive['cellphone'], $chk);
                 if (empty($chk)) {
                     return 701;
                 }
@@ -437,10 +448,10 @@ class Member extends Base17mai
     {
     }
 
-    private function checkMemberExists($MemberNO)
+    private function checkManagerExists($MemberNO)
     {
-        $para = ['member_no' => $MemberNO];
-        $table = 'member';
+        $para = ['member_id' => $MemberNO, 'apply_status' => '1'];
+        $table = 'seller_manager';
         $result = $this->checkExistsDataInTable($para, $table);
         return $result;
     }
@@ -632,9 +643,12 @@ class Member extends Base17mai
         if ($result && isset($post['imei']) && strlen($post['imei']) === 15)
             $this->UpdateIMEI($post['imei'], $post['regid']);
         if ($result) {
+            $javascript .= '$(\'#MemberHint\').hide(1000);';
+            $javascript .= '$(\'#login-modal\').modal(\'hide\');';
             $javascript .= 'showMessage(\'登入成功\');';
             $javascript .= 'location.href = \'index.php\';';
         } else {
+            $javascript .= '$(\'#MemberHint\').show(1000);';
             $javascript .= 'showMessage(\'帳號或密碼錯誤\');';
         }
         $output = array('javascript' => $javascript);
@@ -654,7 +668,7 @@ class Member extends Base17mai
     {
         $javascript = '';
         if (isset($post['targetID'])) {
-            $MName = $this->getMemberName(addslashes($post['targetID']));
+            $MName = $this->getManagerName(addslashes($post['targetID']));
             $javascript = "$(\"input#parent_name\").val(\"{$MName}\");";
         }
         $this->PAE(array('javascript' => $javascript));

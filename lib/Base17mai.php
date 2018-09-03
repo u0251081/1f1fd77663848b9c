@@ -135,13 +135,13 @@ class Base17mai
         return $result;
     }
 
-    protected function GenerateSQLColumn($GLUE = ', ', $Parameter = [])
+    protected function GenerateSQLColumn($GLUE = ', ', $Parameter = [], $isCondition = false)
     {
         if (is_array($Parameter)) {
             $rst = [];
             foreach ($Parameter as $key => $value) {
-                if (isset($valeu['PARAM_TYPE']) && $value['VALUE'] === null) $rst[] = $key . ' is :' . $key;
-                else $rst[] = $key . '= :' . $key;
+                if (isset($valeu['PARAM_TYPE']) && $value['VALUE'] === null && $isCondition) $rst[] = $key . ' is :' . $key;
+                else $rst[] = $key . ' = :' . $key;
             }
             $result = implode($GLUE, $rst);
             return $result;
@@ -309,6 +309,18 @@ class Base17mai
                 $result[$key]['child'] = $this->getAdminMenuItem($value['id']);
             }
         }
+        return $result;
+    }
+
+    protected function MaskSecret($String = '')
+    {
+        $len = (int)(strlen($String) / 3);
+        $replacement = '';
+        $not = 3 - $len % 3;
+        $start = $len + $not % 3;
+        $start = $start > 6 ? 6 : $start;
+        for ($i = 0; $i < (int)(strlen($String) - $len * 2); $i++) $replacement .= '*';
+        $result = substr_replace($String, $replacement, (int)$start, -(int)$len);
         return $result;
     }
 

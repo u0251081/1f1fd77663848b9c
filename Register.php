@@ -117,9 +117,13 @@ function auto_login($register)
     $("form#reg_form").submit(function () {
         let email = $(this).find('[name="account"]').val();
         let passwd = $(this).find('[name="password"]').val();
-        let para = {email: email, password: passwd};
+        let para = {account: email, password: passwd};
         ajax17mai('Member', 'CreateAccount',{},para);
         return false;
+    });
+
+    $(document).on('keypress', 'form#reg_form', function (event) {
+        if (event.which === 13) $('input[name="reg_btn"]').click();
     });
 
     $("input[name='reg_btn']").click(function () {
