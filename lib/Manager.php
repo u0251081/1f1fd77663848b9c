@@ -69,7 +69,7 @@ class Manager extends Base17mai
         return $result;
         # $result['angelValue'] = 20000; // 如果超過這個數字，消費額不增加
         # $result['threshold'] = 500;    // 如果低語着個數字，消費者不計算
-        # $result['storeFee'] = 1;  // 店家要直接將營業額乘以這個數字處以100作為家長獎金
+        # $result['storeFee'] = 1;       // 店家要直接將營業額乘以這個數字處以100作為家長獎金
     }
 }
 
