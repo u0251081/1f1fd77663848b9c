@@ -65,6 +65,9 @@
                         <span class="member-icon-text">團購家族-申請</span>
                     </td>
 
+                </tr>
+
+                <tr>
                     <?php if ($manager_no !== '') : ?>
                         <td class="cp tab-width" onclick="location.href='index.php?url=crew';">
                             <div class="member-icon">
@@ -73,10 +76,6 @@
                             <span class="member-icon-text">家族成員</span>
                         </td>
                     <?php endif; ?>
-                </tr>
-
-                <tr>
-
                     <?php if ($manager_no !== '') : ?>
                         <td class="cp tab-width" onclick="location.href='index.php?url=bonus';">
                             <div class="member-icon">
@@ -85,21 +84,9 @@
                             <span class="member-icon-text">獎勵查詢</span>
                         </td>
                     <?php endif; ?>
-                    <?php
-                    if ($_SESSION['manager_no'] != "") {
-                        ?>
-                        <td class="cp tab-width" onclick="location.href='index.php?url=fb_search';">
-                            <div class="member-icon">
-                                <img src="img/icon/order.png">
-                            </div>
-                            <span class="member-icon-text">FB粉絲團</span>
-                        </td>
-                        <?php
-                    }
-                    ?>
                 </tr>
                 <?php
-                if (@$_SESSION['device'] != 'mobile') {
+                if ($_SESSION['device'] !== 'mobile') {
                     ?>
                     <tr>
                         <td colspan="3" class="cp tab-width" onclick="location.href='index.php?url=logout';">
@@ -107,6 +94,17 @@
                                 <img src="img/icon/logout.png">
                             </div>
                             <span class="member-icon-text">登出</span>
+                        </td>
+                    </tr>
+                    <?php
+                }else {
+                    ?>
+                    <tr>
+                        <td colspan="3" class="cp tab-width" onclick="mobileLogout();">
+                            <div class="member-icon">
+                                <img src="img/icon/logout.png">
+                            </div>
+                            <span class="member-icon-text">特殊登出</span>
                         </td>
                     </tr>
                     <?php
@@ -128,5 +126,9 @@
 
     function add_mg() {
         window.javatojs.aaa();
+    }
+
+    function mobileLogout() {
+        ajax17mai('Member','MobileLogout');
     }
 </script>

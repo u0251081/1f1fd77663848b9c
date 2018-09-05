@@ -202,6 +202,7 @@ class Product extends Base17mai
             $javascript .= 'showMessage(\'紅利點數填寫有誤\');';
             $checkFlag = false;
         }
+        $receive['Prelease'] = isset($receive['Prelease']) ? 1 : 0;
         if (!$checkFlag) print json_encode(['javascript' => $javascript]);
         return $checkFlag;
     }

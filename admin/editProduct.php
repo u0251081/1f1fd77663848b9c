@@ -181,6 +181,8 @@ else $vendorContent = $memberNO;
         });
 
         $(document).on('submit', 'form', function () {
+            let inputValue = getFormData($(this));
+            ajax17mai('Product', 'UpdateProduct', {}, inputValue)
             return false;
         });
 
@@ -341,11 +343,6 @@ else $vendorContent = $memberNO;
         }
 
         $("input[name='bonus']").blur(validBonus);
-
-        $(document).on('submit', 'form', function () {
-            let inputValue = getFormData($(this));
-            ajax17mai('Product', 'UpdateProduct', {}, inputValue)
-        });
 
 
     </script>

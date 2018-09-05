@@ -29,6 +29,50 @@ class Administrator extends Base17mai
         $this->adminData = &$_SESSION['adminData'];
     }
 
+    public function GetSysConfig()
+    {
+        $SQL = 'select * from sysconfig;';
+        $rst = $this->PDOOperator($SQL);
+        $result = array();
+        foreach ($rst as $item) {
+            $result[$item['ParameterName']] = $item['ParameterValue'];
+        }
+        return $result;
+    }
+
+    public function ajaxResetSys($get, $post)
+    {
+        $configs = $this->GetSysConfig();
+        $javascript = '';
+        foreach ($configs as $key => $item) {
+            $javascript .= '$(\'input[name="' . $key . '"]\').val(\'' . $item . '\');';
+        }
+        $this->PAE(['javascript' => $javascript]);
+    }
+
+    public function ajaxSaveSys($get, $post)
+    {
+        $setting = ['threshold', 'angelValue', 'storeFee'];
+        $javascript = '';
+        foreach ($setting as $key => $value) {
+            $check = $this->checkExistsDataInTable(['ParameterName' => $value], 'sysconfig');
+            $Para = array(
+                'ParameterName' => $value,
+                'ParameterValue' => $post[$value],
+            );
+            if ($check) {
+                $SQL = 'update sysconfig set ParameterValue = :ParameterValue where ParameterName = :ParameterName';
+                $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_UPDATE);
+            } else {
+                $SQL = 'insert into sysconfig set ParameterName = :ParameterName, ParameterValue = :ParameterValue';
+                $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_INSERT_NORMAL);
+            }
+            if ($rst) $javascript .= 'showMessage(\'' . $value . '儲存成功\');';
+            else $javascript .= 'showMessage(\'' . $value . '沒有變更\');';
+        }
+        if (true) $this->PAE(['javascript' => $javascript]);
+    }
+
     private function getAllIdentity()
     {
         $result = array(
@@ -75,7 +119,8 @@ class Administrator extends Base17mai
         $_SESSION['identity'] = $adminData['identity'];
     }
 
-    public function checkLogin() {
+    public function checkLogin()
+    {
         if (!empty($this->adminData['ID'])) {
             return true;
         } else {
@@ -100,6 +145,7 @@ class Administrator extends Base17mai
         $result = $this->adminData['identity'];
         return $result;
     }
+
     public function getIdentityStr()
     {
         $sample = $this->getAllIdentity();

@@ -197,7 +197,7 @@ $check_res = mysql_query($check_sql);
         <div class="modal-content">
             <div class="modal-body">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4>行銷經理規範</h4>
+                <h4>團購家族家長條例</h4>
                 <div>
                     <?php
                     $rule_sql = "SELECT * FROM rule WHERE id='1'";

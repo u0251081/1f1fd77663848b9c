@@ -11,6 +11,7 @@ namespace Base17Mai;
 require_once 'toolFunc.php';
 
 use Base17Mai\Bank;
+use function Base17Mai\take;
 
 class Member extends Base17mai
 {
@@ -210,11 +211,11 @@ class Member extends Base17mai
 
     private function getManagerName($MemberNO = false)
     {
-        if ($MemberNO === false) $result = 'no this member';
+        if ($MemberNO === false) $result = '沒有家長是這個編號';
         else {
             $sql = "select m_name from member left join seller_manager on member_no = member_id where member_no = '{$MemberNO}' and apply_status = '1';";
             $result = $this->PDOOperator($sql);
-            $result = isset($result[0]['m_name']) ? $result[0]['m_name'] : 'no this member';
+            $result = isset($result[0]['m_name']) ? $result[0]['m_name'] : '沒有家長是這個編號';
         }
         return $result;
     }
@@ -241,12 +242,14 @@ class Member extends Base17mai
             // check id_card input
             if ($this->checkNoneFilled('id_card')) {
                 if (empty($receive['id_card'])) {
-                    return 400;
+                    // it could be empty
                 } else {
                     $idCode = $receive['id_card'];
                     $natural = $this->checkIDNumber($idCode);
                     $juristic = $this->checkGUINumber($idCode);
+                    $repeat = $this->checkExistsDataInTable(['id_card' => $receive['id_card']], 'member');
                     if (!$natural && !$juristic) return 401;
+                    if ($repeat) return 402;
                     if ($natural) $receive['mType'] = '1';
                     if ($juristic) $receive['mType'] = '0';
                 }
@@ -266,11 +269,15 @@ class Member extends Base17mai
             // check gender Valid
             if ($this->checkNoneFilled('gender')) {
                 if (strlen($receive['gender']) < 1 or $receive['gender'] === 'NaN') {
-                    return 900;
+                    unset($receive['gender']);
+                    // return 900; it could be null
                 } else {
                     if ($receive['gender'] < 0 or $receive['gender'] > 3) {
                         return 901;
                     }
+                    if (!isset($receive['mType'])) return 902;
+                    if ($receive['mType'] === '1' && $receive['gender'] !== $receive['id_card'][1]) return 903;
+                    if ($receive['mType'] === '0' && $receive['gender'] !== '0') return 903;
                 }
             }
 
@@ -350,14 +357,23 @@ class Member extends Base17mai
                 case 201:
                     $message = '姓名必須兩個字以上';
                     break;
+                case 402:
+                    $message = '身份證字號已申請過';
+                    break;
                 case 500:
                     $message = '銀行代碼必須選';
                     break;
                 case 501:
                     $message = '銀行帳號格式錯誤';
                     break;
+                case 902:
+                    $message = '請提供統一編號以驗證性別';
+                    break;
+                case 903:
+                    $message = '統一編號與性別不符，請再次確認';
+                    break;
                 default:
-                    $message = '有地方出錯了';
+                    $message = '有地方出錯了' . $checkInput;
                     break;
             }
             $javascript .= 'showMessage("' . $message . '");';
@@ -476,8 +492,8 @@ class Member extends Base17mai
         $member_arr = $this->PDOOperator($sql, $para, Base17mai::DO_SELECT);
         $member_no = isset($member_arr[0]['member_no']) ? $member_arr[0]['member_no'] : null;
         if (!is_null($member_no)) {
-            $this->setUpMemberInformation($member_no);
-            $this->setUpManagerInformation($member_no);
+            $this->setupMemberInformation($member_no);
+            $this->setupManagerInformation($member_no);
             return true;
         } else {
             return false;
@@ -498,7 +514,7 @@ class Member extends Base17mai
         return true;
     }
 
-    private function setUpMemberInformation($MemberNO = false)
+    private function setupMemberInformation($MemberNO = false)
     {
         if ($MemberNO === false) return $MemberNO;
         $sql = "select id, member_no from member where member_no = '{$MemberNO}';";
@@ -511,9 +527,10 @@ class Member extends Base17mai
             $_SESSION["member_no"] = $member_info['member_no']; //會員編號
             // $_SESSION['device'] = 'desktop'; //判斷登入的裝置
         }
+        return true;
     }
 
-    private function setUpManagerInformation($MemberNO = false)
+    private function setupManagerInformation($MemberNO = false)
     {
         $sql = "select manager_no from seller_manager where member_id = :member_id and manager_status = '1';";
         $para = ['member_id' => $MemberNO];
@@ -534,7 +551,7 @@ class Member extends Base17mai
         $onceColumns = ['born', 'id_card', 'parent_number', 'gender', 'mType'];
         $specialPara = array('password', 'bank_id', 'bank_no', 'mType', 'gender', 'parent_number');
         foreach ($onceColumns as $key => $value) {
-            if ($this->checkNoneFilled($value) && strlen($config[$value]) > 0) {
+            if ($this->checkNoneFilled($value) && isset($config[$value]) && strlen($config[$value]) > 0) {
                 if (!in_array($value, $specialPara)) $SQLPara[$value] = $config[$value];
                 if ($value === 'mType' || $value === 'gender') {
                     $SQLPara[$value]['PARAM_TYPE'] = Base17mai::PDO_PARSE_INT;
@@ -576,7 +593,7 @@ class Member extends Base17mai
          * 避免在新手機登入，舊手機也處於登入狀態
          */
         $imeiNoneSet = true;
-        if (!empty($chkIMEI) && $imeiNoneSet) {
+        if (!empty($chkIMEI) && $imeiNoneSet || $imei === '') {
             $SQL = 'update member set imei = :imei, reg_id = :reg_id where member_no = :member_no;';
             $Para = array(
                 'imei' => $imei,
@@ -644,7 +661,7 @@ class Member extends Base17mai
             $this->UpdateIMEI($post['imei'], $post['regid']);
         if ($result) {
             $javascript .= '$(\'#MemberHint\').hide(1000);';
-            $javascript .= '$(\'#login-modal\').modal(\'hide\');';
+            $javascript .= 'if (typeof $(\'#login-modal\').modal !== \'undefined\') $(\'#login-modal\').modal(\'hide\');';
             $javascript .= 'showMessage(\'登入成功\');';
             $javascript .= 'location.href = \'index.php\';';
         } else {
@@ -700,7 +717,7 @@ class Member extends Base17mai
         $member_no = addslashes(take('member_no', '', 'session'));
         $productID = addslashes(take('productID', '', 'post'));
         $result = $this->removeFromTrack($member_no, $productID);
-        if ($result) $this->PAE(['javascript' => 'showMessage("成功取消追蹤"); $(\'a#'.$productID.'\').closest(\'tr\').remove();']);
+        if ($result) $this->PAE(['javascript' => 'showMessage("成功取消追蹤"); $(\'a#' . $productID . '\').closest(\'tr\').remove();']);
     }
 
     public function checkTrackStatus($mid, $pid)
@@ -729,6 +746,14 @@ class Member extends Base17mai
         else $this->PAE(['javascript' => 'showMessage("加入購物車失敗");']);
     }
 
+    public function ajaxMobileLogout()
+    {
+        $this->UpdateIMEI();
+        $javascript = 'showMessage("成功登出");';
+        $javascript .= 'location.href="login.htmlk";';
+        $this->PAE(['javascript' => $javascript]);
+    }
+
     private function checkCartStatus($mid, $pid)
     {
         $para = ['productID' => $pid, 'member_no' => $mid];
@@ -749,6 +774,22 @@ class Member extends Base17mai
         foreach ($rst as $key => $value) {
             $rst[$key]['Prelease'] = ($rst[$key]['Prelease'] === '1') ? '上架' : '下架';
         }
+        return $rst;
+    }
+
+    public function GetRecord($member_no, $startDate = '', $endDate = '')
+    {
+        $now = date('Y-m') . '-00';
+        if ($startDate < $endDate) {
+            $tmp = $startDate;
+            $startDate = $endDate;
+            $endDate = $tmp;
+        }
+        $SQL = "select * from record_member where member_no = :member_no and ReMonth >= :startMonth and ReMonth <= :endMonth;";
+        $Para['member_no'] = $member_no;
+        $Para['startMonth'] = $startDate === '' ? $now : $startDate;
+        $Para['endMonth'] = $endDate === '' ? $now : $endDate;
+        $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_SELECT);
         return $rst;
     }
 

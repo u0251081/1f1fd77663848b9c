@@ -9,7 +9,7 @@ require_once 'admin/mysql.php';
 
 use function Base17Mai\take;
 
-$dev_mode = true;
+$dev_mode = false;
 sql();
 $member_id = '';
 /*
@@ -254,7 +254,7 @@ function checkMemberInfoStatus($member_id)
     $sql = "select * from member where member_no = :member_id";
     $para = ['member_id' => $member_id];
     $member_info = pdo_select_sql($sql, $para)[0];
-    $require_column = ['bank_no', 'id_card', 'address', 'cellphone'];
+    $require_column = [/*'bank_no', 'id_card',*/ 'address', 'cellphone'];
     foreach ($require_column as $v) {
         if (strlen($member_info[$v]) < 1) $status = false;
     }
@@ -559,8 +559,6 @@ function checkPermissionRequire($url = '')
 <?php
 @$url = $_GET['url'];
 if ($member_id !== '') {
-    $member_status = checkMemberInfoStatus($member_id);
-    if (!$member_status) finish_profile();
 }
 // switch content of page
 $url = isset($_GET['url']) ? $_GET['url'] : '';
@@ -570,6 +568,8 @@ else {
     $requirePermission = checkPermissionRequire($url);
     if ($member_id === '' && $requirePermission === 'member') requireMemberAccount();
     else {
+        $member_status = checkMemberInfoStatus($member_id);
+        if (!$member_status) finish_profile();
         // check page file exists
         if (is_file($url . ".php") && $url) {
             include_once($url . '.php');
