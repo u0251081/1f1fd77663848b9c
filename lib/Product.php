@@ -269,44 +269,58 @@ class Product extends Base17mai
         $productID = addslashes($post['productID']);
         if ($productID === '') $this->PAE(['javascript' => 'showMessage("更新失敗");']);
         $oldFile = $this->getImage($productID);
-        $filedir = "images/product/";//指定上傳資料
+        $fileDir = "images/product/";//指定上傳資料
         $tmpFiles = [];
         $newFiles = [];
         $result = false;
-        $realpath = $this->RootDir . 'admin/';
+        $realPath = $this->RootDir . 'admin/';
         foreach ($_FILES as $key => $value) {
-            if ($value['error'] === 4) continue;
+            // 取得副檔名
+            $ext = pathinfo($value['name'], PATHINFO_EXTENSION);
+            if ($value['error'] === 4) {
+                if ($key === 'Cover') {
+                    $tmpFiles['Cover'] = false;
+                    $newFiles['Cover'] = false;
+                } else {
+                    $tmpFiles[] = false;
+                    $newFiles[] = false;
+                }
+                continue;
+            }
             if ($key === 'Cover') {
                 $tmpFiles['Cover'] = $value['tmp_name'];
-                $newFiles['Cover'] = $this->generateFileName($realpath . $filedir, date('Ymd'));
+                $newFiles['Cover'] = $this->generateFileName($realPath . $fileDir, date('Ymd')) . $ext;
             } else {
                 $tmpFiles[] = $value['tmp_name'];
-                $newFiles[] = $this->generateFileName($filedir, date('Ymd'));
+                $newFiles[] = $this->generateFileName($realPath . $fileDir, date('Ymd')) . $ext;
             }
         }
+        $javascript = '';
         foreach ($newFiles as $key => $value) {
+            $exp = $value === false ? 'false' : 'true';
+            // $javascript .= 'showMessage("第 ' . $key . ' 筆，狀態 ' . $exp . ' ");';
             if ($value !== false) {
                 if ($key === 'Cover') $cover = 1;
                 else $cover = 0;
                 // if (file_exists($realpath . $oldFile[$key])) unlink($realpath . $oldFile[$key]);
-                move_uploaded_file($tmpFiles[$key], $realpath . $filedir . $value);
-                $SQL = '';
-                if (isset($oldFile[$key])) $SQL .= "delete from productimage where picture = '{$oldFile[$key]}';";
-                $SQL .= "insert into productimage set productID = :productID, picture = :picture, cover = :cover;";
+                move_uploaded_file($tmpFiles[$key], $realPath . $fileDir . $value);
                 $Para = array(
                     'productID' => $productID,
-                    'picture' => $filedir . $value,
+                    'picture' => $fileDir . $value,
                     'cover' => array(
                         'PARAM_TYPE' => Base17mai::PDO_PARSE_INT,
                         'VALUE' => $cover
                     )
                 );
+                $SQL = '';
+                if (isset($oldFile[$key])) $SQL .= "update productimage set picture = :picture, cover = :cover where productID = :productID and picture = '{$oldFile[$key]}';";
+                else $SQL .= "insert into productimage set productID = :productID, picture = :picture, cover = :cover;";
                 $this->PDOOperator($SQL, $Para, Base17mai::DO_SELECT);
                 $result = true;
             }
         }
-        if ($result) $javascript = 'showMessage("更新成功");location.href="home.php?url=product_img";';
-        else $javascript = 'showMessage("沒有更新");';
+        if ($result) $javascript .= 'showMessage("更新成功");location.href="home.php?url=product_img";';
+        else $javascript .= 'showMessage("沒有更新");';
         $this->PAE(['javascript' => $javascript]);
     }
 

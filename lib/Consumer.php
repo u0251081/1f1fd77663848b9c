@@ -132,11 +132,22 @@ class Consumer extends Base17mai
         return true;
     }
 
+    private function checkRelease($productID = '')
+    {
+        $SQL = 'select Prelease from product where id = :productID';
+        $Para['productID'] = $productID;
+        $rst = $this->PDOOperator($SQL, $Para);
+        $result = isset($rst[0]) && $rst[0]['Prelease'] === '1' ? true : false;
+        return $result;
+    }
+
     private function UpdateCart($item)
     {
         $member_id = take('member_no', '', 'session');
         $item['member_no'] = $member_id;
         $productID = $item['productID'];
+        $release = $this->checkRelease($productID);
+        if ($release === false) return 987;
         $Remain = $this->getInventory($productID, $item['specCode']);
         if ($item['Quantity'] <= $Remain) {
             $SQL = 'update shoppingcart set Quantity = :Quantity where member_no = :member_no and productID = :productID and specCode = :specCode;';
@@ -149,17 +160,31 @@ class Consumer extends Base17mai
 
     public function ajaxUpdateCart($get, $post)
     {
+        $member_id = take('member_no', '', 'session');
         $cnt = 0;
+        $javascript = '';
         if (is_array($post['cartItem'])) {
-            foreach ($post['cartItem'] as $item) {
+            foreach ($post['cartItem'] as $key => $item) {
+                $ind = $key + 1;
                 if ($this->checkCartInput($item)) {
                     $result = $this->UpdateCart($item);
-                    if ($result) $cnt++;
+                    if ($result === true) $cnt++;
+                    if ($result === 987) $javascript .= "showMessage('第 {$ind} 項商品已下架，請移除');";
                 } else continue;
             }
         }
-        if ($cnt === 0) $javascript = 'showMessage("沒有更新");';
-        else $javascript = "showMessage('購物車中有{$cnt}件商品更新');";
+        $products = $this->GetListInCart($member_id);
+        foreach ($products as $value) {
+            $CID = $value['CID'];
+            $pid = $value['PID'];
+            $pnm = $value['PName'];
+            $spe = $value['specCode'];
+            $qty = $value['Quantity'];
+            $javascript .= "$('tr#{$CID}').find('input[name=\"Quantity\"]').val('{$qty}');";
+        }
+        if ($cnt === 0) $javascript .= 'showMessage("沒有更新");';
+        else $javascript = "showMessage('購物車中有{$cnt}件商品更新');" . $javascript;
+        $javascript .= 'refreshAmount()';
         $this->PAE(['javascript' => $javascript]);
     }
 
@@ -183,7 +208,7 @@ class Consumer extends Base17mai
 
     private function GetListInCart($member_no)
     {
-        $SQL = 'select b.PName, b.unitPrice, c.productID, c.specCode, c.specification, a.Quantity, b.bonus, b.feedBack from shoppingcart as a left join product as b on a.productID = b.id left join productspec as c on a.specCode = c.specCode and b.productID = c.productID where a.member_no = :member_no;';
+        $SQL = 'select a.id as CID, a.productID as PID, b.Prelease,b.PName, b.unitPrice, c.productID, c.specCode, c.specification, a.Quantity, b.bonus, b.feedBack from shoppingcart as a left join product as b on a.productID = b.id left join productspec as c on a.specCode = c.specCode and b.productID = c.productID where a.member_no = :member_no;';
         $para['member_no'] = $member_no;
         $result = $this->PDOOperator($SQL, $para);
         if (!isset($result)) return false;

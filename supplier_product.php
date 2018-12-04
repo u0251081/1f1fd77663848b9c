@@ -1,6 +1,6 @@
 <?php
 @$sid = $_GET['sid'];
-$product_sql = "SELECT * FROM product,supplier WHERE supplier.id=product.s_id AND product.s_id='$sid' AND product.added='1'";
+$product_sql = "SELECT * FROM supplier left join product on supplier.id = product.vendorID WHERE supplier.id = '$sid' AND product.Prelease = 1;";
 $product_res = mysql_query($product_sql);
 ?>
 <!-- product category -->
@@ -10,7 +10,7 @@ $product_res = mysql_query($product_sql);
             <div class="col-md-10 col-md-offset-1">
                 <div class="aa-promo-area">
                     <div class="row">
-                       
+
                         <div class="tab-content ax">
                         <?php
                         if(mysql_num_rows($product_res) > 0 )
@@ -23,18 +23,18 @@ $product_res = mysql_query($product_sql);
                                     <div class="col-md-4 col-sm-4">
                                         <article class="aa-latest-blog-single">
                                             <figure class="aa-blog-img">
-                                                <a class="aa-product-img" href="index.php?url=product_detail&product_id=<?php echo $product_row['0']; ?>">
+                                                <a class="aa-product-img" href="index.php?url=product_detail&product_id=<?php echo $product_row['id']; ?>">
 
                                                     <?php
-                                                   
-                                                    $sql = "SELECT * FROM product_img WHERE p_id='".$product_row['0']."' AND is_main='1'";
+
+                                                    $sql = "SELECT * FROM productimage WHERE Cover = 1 AND productID = '{$product_row['productID']}';";
                                                     $res = mysql_query($sql);
                                                     $row = mysql_fetch_array($res);
                                                     if($row['id'] != "")
                                                     {
                                                         ?>
                                                         <img src="admin/<?php echo $row['picture']; ?>" width="250" height="300">
-                                                        
+
                                                         <?php
                                                     }
                                                     ?>

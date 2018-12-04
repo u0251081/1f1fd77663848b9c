@@ -1,6 +1,10 @@
 <?php
 date_default_timezone_set('Asia/Taipei'); //設定台北時區
 define('BaseSecurity', 'this is 17mai');
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '0.0.0.0';
+$uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+$BaseURL = $protocol . '://' . $host . $uri;
 session_start();
 $_SESSION['checkCode'] = BaseSecurity;
 require_once 'vendor/autoload.php';
@@ -25,11 +29,13 @@ if ($dev_mode) :
     print 'member_id: ' . $member_id . "\n" . '<br>' . "\n";
     print 'manager_no: ' . $manager_no . "\n" . '<br>' . "\n";
 endif;
+$history = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'index.php';
+$history = isset($_SESSION['history_ary']) && isset($_SESSION['history_ary'][count($_SESSION['history_ary']) - 1]) ? $_SESSION['history_ary'][count($_SESSION['history_ary']) - 1] : 'index.php';
+
+
 /*
  * 判斷登入的是電腦版還是手機版
  */
-$history = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'index.php';
-
 $_SESSION['device'] = checkUserAgent();
 $htm_para1 = '';
 $htm_para2 = '';
@@ -254,7 +260,8 @@ function checkMemberInfoStatus($member_id)
     $sql = "select * from member where member_no = :member_id";
     $para = ['member_id' => $member_id];
     $member_info = pdo_select_sql($sql, $para)[0];
-    $require_column = [/*'bank_no', 'id_card',*/ 'address', 'cellphone'];
+    $require_column = [/*'bank_no', 'id_card',*/
+        'address', 'cellphone'];
     foreach ($require_column as $v) {
         if (strlen($member_info[$v]) < 1) $status = false;
     }
@@ -320,6 +327,7 @@ function checkPermissionRequire($url = '')
     <!-- <link id="switcher" href="css/theme-color/bridge-theme.css" rel="stylesheet"> -->
     <!-- Top Slider CSS -->
     <link href="css/sequence-theme.modern-slide-in.css" rel="stylesheet" media="all">
+    <!--<link href="css/myStyle.css" rel="stylesheet" media="all">-->
 
     <!-- Main style sheet -->
     <link href="css/style.css" rel="stylesheet">
@@ -381,7 +389,7 @@ function checkPermissionRequire($url = '')
             border-radius: 25px;
             font-size: 20px;
             min-width: 50px;
-            height: 50px;
+            min-height: 50px;
             color: #FFFFFF;
         }
 
@@ -510,39 +518,22 @@ function checkPermissionRequire($url = '')
                     $banner_sql = "SELECT * FROM banner WHERE `status`='1'";
                     $banner_res = mysql_query($banner_sql);
                     while (@$banner_row = mysql_fetch_array($banner_res)) {
-                        if (@$_SESSION['device'] != "" && $_SESSION['device'] == 'desktop') {
+                        $imageURL = '';
+                        $device = take('device', '', 'session');
+                        if ($device === 'desktop') $imageURL = "admin/{$banner_row['img']}";
+                        if ($device === 'mobile') $imageURL = "admin/{$banner_row['mobile_img']}";
+                        if (is_file($imageURL)) :
                             ?>
                             <li id="s_img_display">
                                 <div class="seq-model">
-                                    <a href="<?php echo @$banner_row['url']; ?>"><img
-                                                src="<?php echo 'admin/' . $banner_row['img']; ?>"
-                                                class="img-responsive" style='width:100%;'/></a>
+                                    <a href="<?= $banner_row['url'] ?>">
+                                        <img src="<?= $imageURL ?>" class="img-responsive" style='width:100%;'>
+                                    </a>
                                 </div>
                             </li>
-                            <?php
-                        } else if (@$_SESSION['device'] != "" && $_SESSION['device'] == 'mobile') {
-                            ?>
-                            <li id="s_img_display">
-                                <div class="seq-model">
-                                    <a href="<?php echo @$banner_row['url']; ?>"><img
-                                                src="<?php echo 'admin/' . $banner_row['mobile_img']; ?>"
-                                                class="img-responsive" style='width:100%;'/></a>
-                                </div>
-                            </li>
-                            <?php
-                        } else {
-                            ?>
-                            <li id="s_img_display">
-                                <div class="seq-model">
-                                    <a href="<?php echo @$banner_row['url']; ?>"><img
-                                                src="<?php echo 'admin/' . $banner_row['img']; ?>"
-                                                class="img-responsive" id="no-login-slider" style='width:100%;'/></a>
-                                </div>
-                            </li>
-                            <?php
-                        }
-                    }
-                    ?>
+                        <?php
+                        endif;
+                    } ?>
                     <!-- 輪播 -->
                 </ul>
             </div>
@@ -566,16 +557,21 @@ $blackList = array('login');
 if ($url === '') include 'main.php';
 else {
     $requirePermission = checkPermissionRequire($url);
-    if ($member_id === '' && $requirePermission === 'member') requireMemberAccount();
-    else {
-        $member_status = checkMemberInfoStatus($member_id);
-        if (!$member_status) finish_profile();
-        // check page file exists
-        if (is_file($url . ".php") && $url) {
-            include_once($url . '.php');
-        } else {
-            include_once('404.php');
+    if ($requirePermission === 'member') {
+        if ($member_id === '') requireMemberAccount();
+        else {
+            $member_status = checkMemberInfoStatus($member_id);
+            if (!$member_status) finish_profile();
         }
+    }
+// check page file exists
+    if (is_file($url . ".php") && $url) {
+        include_once($url . '.php');
+    } else {
+        include_once('404.php');
+    }
+    if ($member_id === '' && $requirePermission === 'member') {
+    } else {
     }
 }
 
@@ -732,7 +728,7 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
 </html>
 
 <script type="text/javascript">
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('table.dataTable').dataTable();
     });
 

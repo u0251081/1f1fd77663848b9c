@@ -168,6 +168,13 @@ function generateAreaOptionHtml($areaList = array(), $targetID = false)
                 <!-- edit form column -->
                 <div class="col-md-12 personal-info">
                     <form class="form-horizontal" id="profile_form" role="form" method="post">
+                        <!-- 會員編號 -->
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">會員編號</label>
+                            <div class="col-lg-8">
+                                <input class="form-control" type="text" value="<?= $memberNO ?>" disabled>
+                            </div>
+                        </div>
                         <!-- 帳號/e-mail -->
                         <div class="form-group">
                             <label class="col-lg-3 control-label">E-mail(帳號)</label>

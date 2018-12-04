@@ -6,6 +6,25 @@ use function Base17Mai\take;
 $productID = take('id');
 $Product = new Product();
 $PID = $Product->getOperatorCode($productID);
+if ($PID === '') :
+    print '<!-- 404 error section -->';
+    print '<section id="aa-error">';
+    print '    <div class="container">';
+    print '        <div class="row">';
+    print '            <div class="col-md-12">';
+    print '                <div class="aa-error-area" style="margin-bottom: 100px; padding-top: 1px;">';
+    print '                    <h2>404</h2>';
+    print '                    <span>很抱歉，查無此商品</span>';
+    print '                    <p>查無此商品，若您認為這是錯誤，請與系統管理員聯繫！</p>';
+    print '                    <a href="javascript:void(0);" onclick="javascript:history.back(-1);">按此返回前一頁</a>';
+    print '                </div>';
+    print '            </div>';
+    print '        </div>';
+    print '    </div>';
+    print '</section>';
+    print '<!-- / 404 error section -->';
+    exit();
+endif;
 $images = $Product->getImage($PID);
 $imagesHTML = imagesToHtml($images);
 $history = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : 'index.php';
@@ -390,20 +409,28 @@ if (isset($_GET['manager_id']) && @$_SESSION['manager_no'] != $_GET['manager_id'
 }
 
 //以下為瀏覽紀錄處理
-if (isset($_SESSION['history_ary'])) {
-    $key = array_search($productID, $_SESSION['history_ary']);
-    if ($key !== false) {
-        //unset($_SESSION['history_ary'][$key]);
-        //array_values($_SESSION['history_ary']);
-        while (count($_SESSION['history_ary']) > 5) {
-            array_pop($_SESSION['history_ary']);
+// $_SESSION['history_ary'] = [];
+if (!isset($_SESSION['history_ary'])) $_SESSION['history_ary'] = [];
+$history_ind = array_search($BaseURL, $_SESSION['history_ary']);
+if ($history_ind === false) $_SESSION['history_ary'][] = $BaseURL;
+else {
+    $histories = $_SESSION['history_ary'];
+    for ($i = $history_ind; $i < 5; $i++) {
+        if (isset($histories[$i + 1])) $histories[$i] = $histories[$i + 1];
+        else {
+            $histories[$i] = $BaseURL;
+            break;
         }
-    } else {
-        array_push($_SESSION['history_ary'], $productID);
     }
-} else {
-    $_SESSION['history_ary'] = array();
-    array_push($_SESSION['history_ary'], $productID);
+    $_SESSION['history_ary'] = $histories;
+}
+if (count($_SESSION['history_ary']) > 5) {
+    $histories = $_SESSION['history_ary'];
+    foreach ($histories as $key => $value) {
+        if (isset($histories[$key + 1])) $histories[$key] = $histories[$key + 1];
+    }
+    $_SESSION['history_ary'] = $histories;
+    array_pop($_SESSION['history_ary']);
 }
 ?>
 

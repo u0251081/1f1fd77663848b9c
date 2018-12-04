@@ -750,7 +750,7 @@ class Member extends Base17mai
     {
         $this->UpdateIMEI();
         $javascript = 'showMessage("成功登出");';
-        $javascript .= 'location.href="login.htmlk";';
+        $javascript .= 'location.href="login.html";';
         $this->PAE(['javascript' => $javascript]);
     }
 

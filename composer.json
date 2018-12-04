@@ -6,7 +6,8 @@
     "require": {
         "ext-json": "*",
         "ext-pdo" : "*",
-        "ext-mysql" : "*"
+        "ext-mysql" : "*",
+        "ext-fileinfo" :"*"
     },
     "autoload": {
         "classmap": ["lib"]

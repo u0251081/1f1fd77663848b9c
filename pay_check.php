@@ -106,6 +106,7 @@ function product_expired()
         window.history.back(-1);
     </script>
     <?php
+    exit();
 }
 
 function price_amount($product = array())
@@ -159,9 +160,18 @@ function bottom_btn($total = 0)
     return $html;
 }
 
+function checkExpired($products = [])
+{
+    if (!is_array($products)) return false;
+    foreach ($products as $key => $value) :
+        if ($value['Prelease'] !== '1') product_expired();
+    endforeach;
+}
+
 is_first_login($member_id);
 $Consumer = new Consumer();
 $product = $Consumer->ListProductInCart();
+checkExpired($product);
 SetAmount($product);
 $total = price_amount($product);
 $tbody = produce_tbody($product);

@@ -20,12 +20,12 @@ $BonusList = $Bonus['List'];
 
 $Count = (int)$Bonus['Count'];
 $Amount = (int)$Bonus['Amount'];
-$average = $Amount / $Count;
+$average = ($Count > 0) ? $Amount / $Count : 0;
 $TotalBonus = $Bonus['Bonus'];
 
 $self = $Member->GetRecord($member_id);
 $selfAmount = $self[0]['Amount'];
-$rate = $selfAmount / $average;
+$rate = ($average > 0) ? $selfAmount / $average : 0;
 $rate = $selfAmount >= $angelValue ? 1 : $rate;
 $rate = $rate >= 1 ? 1 : $rate;
 
