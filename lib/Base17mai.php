@@ -257,7 +257,7 @@ class Base17mai
             $pdo->commit();
 
         } //Our catch block will handle any exceptions that are thrown.
-        catch (Exception $e) {
+        catch (PDOException $e) {
             //An exception has occured, which means that one of our database queries
             //failed.
             //Print out the error message.
@@ -279,9 +279,10 @@ class Base17mai
     {
         if (is_array($data)) {
             $result = '';
-            $liClass = '';
-            $subSet = '';
             foreach ($data as $value) {
+                $liClass = '';
+                $subSet = '';
+                if ($value['name'] === '搜尋') print $subSet;
                 if (isset($value['child'])) {
                     $liClass = " class='dropdown'";
                     $subSet = '<ul>' . $this->adminMenuToHTML($value['child']) . '</ul>';
