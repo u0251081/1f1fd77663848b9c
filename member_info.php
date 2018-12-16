@@ -66,13 +66,13 @@ use Base17Mai\Bank;
 
 $bank = new Bank();
 $bankList = $bank->getBankList();
-$bankIDListHtml = generateBankOptionsHtml($bankList, $member_BankID);
+$bankIDListHtml = $memberInterface->generateBankOptionsHtml($bankList, $member_BankID);
 $genderList = $memberInterface->getAllGender();
-$genderOptionsHtml = generateGenderOption($genderList, $member_gender);
+$genderOptionsHtml = $memberInterface->generateGenderOption($genderList, $member_gender);
 $cityList = $memberInterface->getAllCity();
-$cityOptionsHtml = generateCityOptionHtml($cityList, $member_city);
+$cityOptionsHtml = $memberInterface->generateCityOptionHtml($cityList, $member_city);
 $areaList = $memberInterface->getSpecifyArea($member_city);
-$areaOptionsHtml = generateAreaOptionHtml($areaList, $member_area);
+$areaOptionsHtml = $memberInterface->generateAreaOptionHtml($areaList, $member_area);
 
 // 處理一次性資料輸入無效化
 // if (!empty($member_born)) $requireInputName1 = '';
@@ -82,56 +82,6 @@ if (strlen($member_gender) === 0) {
     $genderHtml = "<select {$requireInputName4} class=\"form-control\">{$genderOptionsHtml}</select>";
 } else {
     $genderHtml = "<input type=\"text\" class=\"form-control\" readonly value=\"{$genderList[$member_gender]}\">";
-}
-
-// 產生銀行選單
-function generateBankOptionsHtml($bankList = array(), $targetID = false)
-{
-    $html = '';
-    if (!is_array($bankList)) return false;
-    foreach ($bankList as $key => $value) {
-        if (!isset($value['id'])) return false;
-        $selected = ($value['code'] === $targetID) ? 'selected' : '';
-        $html .= "<option value='{$value['code']}' {$selected}>{$value['code']} : {$value['Institutions']}</option>";
-    }
-    return $html;
-}
-
-// 產生性別選單
-function generateGenderOption($genderList = array(), $targetID = false)
-{
-    $html = '';
-    $html .= '<option value="NaN">請選擇性別</option>';
-    if (!is_array($genderList)) return false;
-    foreach ($genderList as $key => $value) {
-        $selected = ((String)$key === $targetID) ? 'selected' : '';
-        $html .= "<option value='{$key}' {$selected}>{$value}</option>";
-    }
-    return $html;
-}
-
-// 產生城市選單
-function generateCityOptionHtml($cityList = array(), $targetID = false)
-{
-    $html = '';
-    if (!is_array($cityList)) return false;
-    foreach ($cityList as $key => $value) {
-        $selected = ($value['id'] === $targetID) ? 'selected' : '';
-        $html .= "<option value='{$value['id']}' {$selected}>{$value['city']}</option>";
-    }
-    return $html;
-}
-
-// 產生地區選單
-function generateAreaOptionHtml($areaList = array(), $targetID = false)
-{
-    $html = '';
-    if (!is_array($areaList)) return false;
-    foreach ($areaList as $key => $value) {
-        $selected = ($value['id'] === $targetID) ? 'selected' : '';
-        $html .= "<option value='{$value['id']}' {$selected}>{$value['area']}</option>";
-    }
-    return $html;
 }
 
 ?>
@@ -300,12 +250,12 @@ function generateAreaOptionHtml($areaList = array(), $targetID = false)
                             </div>
                             <!-- 團購家族家長-編號 -->
                             <div class="form-group">
-                                <label class="col-lg-3 control-label">團購家族-家長編號</label>
+                                <label class="col-lg-3 control-label">團購家族-家長帳號</label>
                                 <div class="col-lg-8">
                                     <input class="form-control" <?= $requireInputName3 ?> type="text"
                                            value="<?php echo $parent_number; ?>">
                                     <span style="display: none; color: red; font-size: 14px;"
-                                          id="parent-hint">團購家族家長編號有誤</span>
+                                          id="parent-hint">團購家族家長帳號有誤</span>
                                 </div>
                             </div>
                             <!-- 團購家族家長-姓名 -->

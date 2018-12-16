@@ -17,10 +17,12 @@ class Member extends Base17mai
 {
     private $memberNO;
 
-    public function __construct()
+    public function __construct($memberNO = false)
     {
         parent::__construct();
         if (isset($_SESSION['member_no'])) $this->memberNO = &$_SESSION['member_no'];
+        if (isset($_SESSION['adminData']) && isset($_SESSION['adminData']['ID']) && isset($_POST['memberID']))
+            $this->memberNO = $this->GetMemberNo($_POST['memberID']);
     }
 
     public function CreateNewMember($account = '', $password = '')
@@ -114,7 +116,16 @@ class Member extends Base17mai
         return $result;
     }
 
-    public function getMemberProfile($MemberNO = false)
+    private function GetMemberNO($memberID = false)
+    {
+        if ($memberID === false) return false;
+        $SQL = 'select member_no from member where id = :memberID;';
+        $rst = $this->PDOOperator($SQL, ['memberID' => $memberID], Base17mai::DO_SELECT, false);
+        $result = isset($rst[0]) ? $rst[0]['member_no'] : '';
+        return $result;
+    }
+
+    public function getMemberProfile($condition = false)
     {
         // 預設
         $result = array(
@@ -132,7 +143,7 @@ class Member extends Base17mai
             'address' => '',
             'cellphone' => ''
         );
-        if ($MemberNO !== false) {
+        if ($condition !== false) {
             $fetchColumn = array(
                 'email',
                 'm_name',
@@ -148,8 +159,15 @@ class Member extends Base17mai
                 'cellphone'
             );
             $SQLColumn = implode(',', $fetchColumn);
-            $SQL = "select  'secret' as password,{$SQLColumn} from member where member_no = :memberNO;";
-            $Para = ['memberNO' => $MemberNO];
+            $SQL = "select  'secret' as password,{$SQLColumn} from member";
+            $where = array();
+            if (is_array($condition)) {
+                foreach ($condition as $index => $value) $where[] = $index . ' = :' . $index;
+            } else {
+                $where[] = 'member_no = :memberNO';
+            }
+            $SQL .= ' where ' . implode(' and ', $where);
+            $Para = is_array($condition) ? $condition : ['memberNO' => $condition];
             $arr = $this->PDOOperator($SQL, $Para, Base17mai::DO_SELECT);
             $result = (!empty($arr[0])) ? $arr[0] : $result;
             if (!empty($result['parent_no'])) $result['parent_name'] = $this->getMemberName($result['parent_no']);
@@ -167,6 +185,56 @@ class Member extends Base17mai
             // '3' => '非二元性別'
         );
         return $result;
+    }
+
+    // 產生性別選單
+    public function generateGenderOption($genderList = array(), $targetID = false)
+    {
+        $html = '';
+        $html .= '<option value="NaN">請選擇性別</option>';
+        if (!is_array($genderList)) return false;
+        foreach ($genderList as $key => $value) {
+            $selected = ((String)$key === $targetID) ? 'selected' : '';
+            $html .= "<option value='{$key}' {$selected}>{$value}</option>";
+        }
+        return $html;
+    }
+
+    // 產生銀行選單
+    public function generateBankOptionsHtml($bankList = array(), $targetID = false)
+    {
+        $html = '';
+        if (!is_array($bankList)) return false;
+        foreach ($bankList as $key => $value) {
+            if (!isset($value['id'])) return false;
+            $selected = ($value['code'] === $targetID) ? 'selected' : '';
+            $html .= "<option value='{$value['code']}' {$selected}>{$value['code']} : {$value['Institutions']}</option>";
+        }
+        return $html;
+    }
+
+    // 產生城市選單
+    public function generateCityOptionHtml($cityList = array(), $targetID = false)
+    {
+        $html = '';
+        if (!is_array($cityList)) return false;
+        foreach ($cityList as $key => $value) {
+            $selected = ($value['id'] === $targetID) ? 'selected' : '';
+            $html .= "<option value='{$value['id']}' {$selected}>{$value['city']}</option>";
+        }
+        return $html;
+    }
+
+    // 產生地區選單
+    public function generateAreaOptionHtml($areaList = array(), $targetID = false)
+    {
+        $html = '';
+        if (!is_array($areaList)) return false;
+        foreach ($areaList as $key => $value) {
+            $selected = ($value['id'] === $targetID) ? 'selected' : '';
+            $html .= "<option value='{$value['id']}' {$selected}>{$value['area']}</option>";
+        }
+        return $html;
     }
 
     public function getAllCity()
@@ -209,13 +277,13 @@ class Member extends Base17mai
         return $result;
     }
 
-    private function getManagerName($MemberNO = false)
+    private function getManagerName($MemberEmail = false)
     {
-        if ($MemberNO === false) $result = '沒有家長是這個編號';
+        if ($MemberEmail === false) $result = '沒有家長是這個帳號';
         else {
-            $sql = "select m_name from member left join seller_manager on member_no = member_id where member_no = '{$MemberNO}' and apply_status = '1';";
+            $sql = "select m_name from member left join seller_manager on member_no = member_id where email = '{$MemberEmail}' and apply_status = '1';";
             $result = $this->PDOOperator($sql);
-            $result = isset($result[0]['m_name']) ? $result[0]['m_name'] : '沒有家長是這個編號';
+            $result = isset($result[0]['m_name']) ? $result[0]['m_name'] : '沒有家長是這個帳號';
         }
         return $result;
     }
@@ -394,7 +462,7 @@ class Member extends Base17mai
             }
             $SQL = "select {$column} from member where member_no = '{$this->memberNO}'";
             $result = $this->PDOOperator($SQL);
-            $check = (strlen($result[0][$column]) < 1);
+            $check = (isset($result[0]) && strlen($result[0][$column]) < 1);
             return $check;
         }
     }
@@ -540,6 +608,11 @@ class Member extends Base17mai
     }
 
     public function DeleteMember($MemberNO)
+    {
+
+    }
+
+    private function EmailToNumber($Email = False)
     {
 
     }
