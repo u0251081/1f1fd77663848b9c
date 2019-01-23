@@ -8,7 +8,7 @@
 
 namespace Base17Mai;
 
-use PDO, PDOException;
+use PDO, PDOException, XTool\XAPDO;
 
 require_once 'mysql.php';
 
@@ -16,6 +16,7 @@ class Base17mai
 {
     protected static $DB = false;
     protected $RootDir = '';
+    protected $XA = false;
     const DO_SELECT = 0;
     const DO_INSERT_NORMAL = 1;
     const DO_INSERT_WITHID = 2;
@@ -39,6 +40,27 @@ class Base17mai
             print 'PDO connect to database fail:' . "\n" . $e->getMessage();
             exit();
         }
+
+        $DBConfig = array(
+            'driver' => 'mysql',
+            'host' => dbhost,
+            'port' => '3306',
+            'username' => dbuser,
+            'password' => dbpasswd,
+            'database' => dbname,
+            'character' => charset
+        );
+
+        $this->XA = new XAPDO($DBConfig);
+
+    }
+
+    public function testXA() {
+        $result = $this->XA
+            ->select('*')
+            ->table('product')
+            ->execute('select');
+        return $result;
     }
 
     public function PAE($result = array()) // Print and Exit

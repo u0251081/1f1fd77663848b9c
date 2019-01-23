@@ -1,6 +1,7 @@
 <?php
 date_default_timezone_set('Asia/Taipei'); //設定台北時區
 define('BaseSecurity', 'this is 17mai');
+define('TEMPLATEPATH', 'templates');
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '0.0.0.0';
 $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
@@ -345,6 +346,7 @@ function checkPermissionRequire($url = '')
     <!--<script src="admin/js/jquery-1.9.1.min.js"></script>-->
     <script src="admin/js/jquery-1.9.1.min.js"></script>
     <script src="js/AJAX17mai.js" type="text/javascript" charset="UTF-8"></script>
+    <!--<script src="js/commonJS.js" type="text/javascript" charset="UTF-8"></script>-->
     <script src="js/CookieOperator.js" type="text/javascript" charset="UTF-8"></script>
 
     <!-- Bootstrap Notify -->
@@ -798,8 +800,7 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
                                 location.href = 'index.php';
 
 
-                            }
-                            else {
+                            } else {
                                 alert('登入失敗請重新登入!');
                                 console.log(i);
                             }
@@ -808,8 +809,7 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
                         {
                         }
                     });
-                }
-                else {
+                } else {
                     alert('登入失敗請重新登入!');
                 }
             });
@@ -876,11 +876,9 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
 
         if (manager_id != "" && vip_id == "") {
             $(this).attr('href', 'intent://jjl/openwith?url=' + url + '&product_id=' + pid + '&manager_id=' + manager_id + '#Intent;scheme=myapp;package=com.nkfust.firstshop;S.browser_fallback_url=http://17mai.com.tw/index.php?url=app_download;end');
-        }
-        else if (manager_id != "" && vip_id != "") {
+        } else if (manager_id != "" && vip_id != "") {
             $(this).attr('href', 'intent://jjl/openwith?url=' + url + '&product_id=' + pid + '&manager_id=' + manager_id + '&vip_id=' + vip_id + '#Intent;scheme=myapp;package=com.nkfust.firstshop;S.browser_fallback_url=http://17mai.com.tw/index.php?url=app_download;end');
-        }
-        else {
+        } else {
             $(this).attr('href', 'intent://jjl/openwith?url=' + url + '&product_id=' + pid + '#Intent;scheme=myapp;package=com.nkfust.firstshop;S.browser_fallback_url=http://17mai.com.tw/index.php?url=app_download;end');
         }
 
@@ -935,8 +933,7 @@ if ($member_id !== '' || (isset($_SESSION['manager_no']) && $_SESSION['manager_n
                 success: function (i) {
                     if (i == 1) {
                         alert('訂閱成功');
-                    }
-                    else if (i == 0) {
+                    } else if (i == 0) {
                         alert('已經訂閱過該行銷經理');
                     }
                 },

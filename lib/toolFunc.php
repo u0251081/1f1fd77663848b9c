@@ -82,7 +82,7 @@ function writeContent($FileName = '', $WriteContent = '', $type = 'write')
             break;
     }
 
-    $result = fwrite($handler, $WriteContent."\n");
+    $result = fwrite($handler, $WriteContent . "\n");
     fclose($handler);
     return $result;
     /*
@@ -93,4 +93,37 @@ function writeContent($FileName = '', $WriteContent = '', $type = 'write')
     $content = fread($handler, filesize(FileName));
     print $content . "\n";
     */
+}
+
+function displayToString($filename = '', $data = array(), $debug = false)
+{
+    $readPath = defined('TEMPLATEPATH') ? TEMPLATEPATH . '/' . $filename : './' . $filename;
+    if ($debug) {
+        print '$filename: ' . $filename . "\n";
+        print '$data: ' . print_r($data, true) . "\n";
+    }
+    if (file_exists($readPath)) {
+        ob_start();
+        foreach ($data as $key => $value) {
+            if (is_numeric($key)) continue;
+            $value = is_string($value) ? '\'' . $value . '\'' : $value;
+            $value = is_array($value) ? print_r($value, true) : $value;
+            eval('$' . $key . ' = ' . $value . ';');
+        }
+        include $readPath;
+        foreach ($data as $key => $value) {
+            if (is_numeric($key)) continue;
+            eval('unset($' . $key . ');');
+        }
+        $result = ob_get_contents();
+        ob_end_clean();
+        /*
+         * <<<HTMLSTR
+         *
+         * HTMLSTR;
+         */
+    } else {
+        $result = $filename . ' not found';
+    }
+    return $result;
 }

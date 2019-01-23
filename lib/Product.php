@@ -404,6 +404,23 @@ class Product extends Base17mai
         return $result;
     }
 
+    private function GetProductCover($productID = '')
+    {
+        $SQL = 'select picture from productimage where productID = :productID and Cover = true';
+        $Parameter = ['productID' => $productID];
+        $IMG_rst = $this->PDOOperator($SQL, $Parameter);
+        $result = isset($IMG_rst[0]) ? $IMG_rst[0]['picture'] : '';
+        return $result;
+    }
+
+    private function GetTrackStatus($PID = '')
+    {
+        $MemberNO = take('MemberNO', '', 'session');
+        print '<!-- get member id is ' . $MemberNO . ' -->';
+        $result = (new Member())->checkTrackStatus($MemberNO, $PID);
+        return $result;
+    }
+
     public function getVendor()
     {
         $productID = $this->productData['vendorID'];
@@ -558,6 +575,22 @@ class Product extends Base17mai
         $result = ($status === '1') ? 'checked' : '';
         return $result;
 
+    }
+
+    public function ListProductsByFront($productIDs = array())
+    {
+        $PIDs = is_array($productIDs) ? implode(', ', $productIDs) : $productIDs;
+        $SQL = 'select * from product where id in (:PIDs) and Prelease = true';
+        $Parameter = array('PIDs' => $PIDs);
+        $result['content'] = $this->PDOOperator($SQL, $Parameter, self::DO_SELECT);
+        $result['count'] = count($result['content']);
+        if ($result['count'] > 0) {
+            foreach ($result['content'] as $key => $item) {
+                $result['content'][$key]['image'] = $this->GetProductCover($item['productID']);
+                $result['content'][$key]['trackStatus'] = $this->GetTrackStatus($item['id']);
+            }
+        }
+        return $result;
     }
 
     public function listAllProducts()

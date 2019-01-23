@@ -13,6 +13,16 @@ define('dbpasswd','First6011750');
 define('dbname','vhost118066');
 define('charset','UTF8');
 
+$DBConfig = array(
+    'driver' => 'mysql',
+    'host' => '127.0.0.1',
+    'port' => '3306',
+    'username' => 'vhost118066',
+    'password' => 'First6011750',
+    'database' => 'vhost118066',
+    'character' => 'utf8'
+);
+
 /*
  * $db_host = "127.0.0.1";
  * $db_username = "vhost118066";

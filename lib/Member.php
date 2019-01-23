@@ -590,7 +590,9 @@ class Member extends Base17mai
         $member_arr = $this->PDOOperator($sql, $para, Base17mai::DO_SELECT);
         $member_info = isset($member_arr[0]) ? $member_arr[0] : null;
         if (!is_null($member_info)) {
-            $_SESSION['front_id'] = $member_info['id']; //會員表的id
+            $_SESSION['front_id'] = $member_info['id']; // 會員表的id
+            $_SESSION['MemberID'] = $member_info['id']; // 會員ID
+            $_SESSION['MemberNO'] = $member_info['member_no']; // 會員ID
             $_SESSION['front_identity'] = 'member'; //身分
             $_SESSION["member_no"] = $member_info['member_no']; //會員編號
             // $_SESSION['device'] = 'desktop'; //判斷登入的裝置

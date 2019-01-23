@@ -52,7 +52,7 @@ $product_res = mysql_query($product_sql);
                                                     <br>
                                                     <span class="aa-product-price"><?php echo "點數： " . $product_row['bonus']; ?></span>
                                                     <br>
-                                                    <p class="aa-product-descrip"><?php echo $product_row['productInformation']; ?></p>
+                                                    <p class="aa-product-descrip"><?php echo $product_row['description']; ?></p>
 
                                                     <?= $trackStatus ?>
 

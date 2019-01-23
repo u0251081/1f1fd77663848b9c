@@ -262,7 +262,7 @@ if (!empty($_GET['fb_no'])) {
                                         </span>
                                     </div>
                                     <div id="description" style="height: 15vh;">
-                                        <p><?= $row['description'] ?></p>
+                                        <p><?= $row['productInformation'] ?></p>
                                     </div>
                                     <form id="productForm" style="display: flex; flex-direction: row; flex-wrap: wrap;">
                                         <input type="hidden" name="productID" value="<?= $productID ?>">
