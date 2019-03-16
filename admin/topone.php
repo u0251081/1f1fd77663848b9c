@@ -140,7 +140,7 @@ $num = count($rst);
                                             </td>
                                             <td width="1%">
                                                 <?php
-                                                $sql2 = "SELECT PName, specification, Quantity FROM consumer_order_detail WHERE OrderID = {$item['id']};";
+                                                $sql2 = "SELECT PName, specification, Quantity FROM consumer_order_detail WHERE OrderID = {$item['OrderID']};";
                                                 $res2 = mysql_query($sql2);
                                                 while ($row2 = mysql_fetch_array($res2)) {
                                                     echo $row2['PName'] . '/', $row2['specification'] . '&nbsp;&nbsp;:&nbsp;&nbsp;' . $row2['Quantity'];
@@ -217,7 +217,7 @@ $num = count($rst);
                                             </td>
                                             <td width="1%">
                                                 <?php
-                                                $sql2 = "SELECT PName, specification, Quantity FROM consumer_order_detail WHERE OrderID = {$item['id']};";
+                                                $sql2 = "SELECT PName, specification, Quantity FROM consumer_order_detail WHERE OrderID = {$item['OrderID']};";
                                                 $res2 = mysql_query($sql2);
                                                 while ($row2 = mysql_fetch_array($res2)) {
                                                     echo $row2['PName'] . '/', $row2['specification'] . '&nbsp;&nbsp;:&nbsp;&nbsp;' . $row2['Quantity'];
@@ -268,10 +268,10 @@ $num = count($rst);
 
                                     ?>
                                     <tr align="center">
-                                        <td width="1%" align="center"><?=$item['id']; ?></td>
-                                        <td width="1%" align="center"><?=$item['PName']; ?></td>
-                                        <td width="1%" align="center"><?=$item['selled']; ?></td>
-                                        <td width="1%" align="center"><?=$item['QuantityRemain']; ?></td>
+                                        <td width="1%" align="center"><?= $item['id']; ?></td>
+                                        <td width="1%" align="center"><?= $item['PName']; ?></td>
+                                        <td width="1%" align="center"><?= $item['selled']; ?></td>
+                                        <td width="1%" align="center"><?= $item['QuantityRemain']; ?></td>
 
                                     </tr>
                                     <?php
@@ -347,8 +347,7 @@ if (isset($password) || isset($name)) {
     showpassword.click(function () {
         if (this.checked) {
             password.replaceWith(inputpassword.val(password.val()));
-        }
-        else {
+        } else {
             inputpassword.replaceWith(password.val(inputpassword.val()));
         }
     });
