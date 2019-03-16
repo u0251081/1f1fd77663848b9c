@@ -21,6 +21,24 @@ class Manager extends Base17mai
         $this->ManagerNO = take('manager_no', '', 'session');
     }
 
+    public static function GetManagerNO()
+    {
+        $result = isset($_SESSION['manager_no']) ? $_SESSION['manager_no'] : false;
+        return $result;
+    }
+
+    public function ListCrewMemberNO($ManagerNO = false)
+    {
+        $SQL = 'select member_no from member where parent_no = :parent_no;';
+        $Para['parent_no'] = ($ManagerNO !== false) ? $ManagerNO : $this->ManagerNO;
+        $rst = $this->PDOOperator($SQL, $Para);
+        $result = [];
+        foreach ($rst as $item) {
+            $result[] = isset($item['member_no']) ? $item['member_no'] : false;
+        }
+        return $result;
+    }
+
     public function ListCrewMember()
     {
         $SQL = 'select city, area, m_name, id_card, email, born, address, cellphone from member left join city on city_id = city.id left join area on area_id = area.id where parent_no = :parent_no;';
@@ -41,7 +59,7 @@ class Manager extends Base17mai
     public function CheckBonus($threshold = 0)
     {
         $SQL = 'select m_name, member_no, ReMonth,Amount,record_member.bonus from member left join record_member using(member_no) where parent_no = :member_no;';
-        $Para['member_no'] = $this->MemberNO;
+        $Para['member_no'] = $this->ManagerNO;
         $rst = $this->PDOOperator($SQL, $Para);
         foreach ($rst as $key => $value) {
             $rst[$key]['m_name'] = $this->MaskSecret($value['m_name']);
@@ -56,20 +74,6 @@ class Manager extends Base17mai
         $result['Amount'] = isset($rst[0]['Amount']) ? $rst[0]['Amount'] : '';
         $result['Bonus'] = isset($rst[0]['Bonus']) ? $rst[0]['Bonus'] : '';
         return $result;
-    }
-
-    public function GetSetting()
-    {
-        $SQL = 'select * from sysconfig;';
-        $rst = $this->PDOOperator($SQL);
-        $result = array();
-        foreach ($rst as $item) {
-            $result[$item['ParameterName']] = $item['ParameterValue'];
-        }
-        return $result;
-        # $result['angelValue'] = 20000; // 如果超過這個數字，消費額不增加
-        # $result['threshold'] = 500;    // 如果低語着個數字，消費者不計算
-        # $result['storeFee'] = 1;       // 店家要直接將營業額乘以這個數字處以100作為家長獎金
     }
 }
 

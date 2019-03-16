@@ -7,33 +7,34 @@
  */
 
 use Base17Mai\Manager,
-    Base17Mai\Member;
+    Base17Mai\Member, Base17Mai\Bonus;
 
 $Manager = new Manager();
 $Member = new Member();
-$setting = $Manager->GetSetting();
+$Bonus = new Bonus();
+
+$self = $Member->GetRecord($member_id);
+$selfAmount = $self['Amount'];
+$CrewMember = $Manager->ListCrewMemberNO();
+$ValidBonus = $Bonus->CalculateBonus($selfAmount, $CrewMember);
+$BonusDetail = $Bonus->GetDetail();
+foreach ($BonusDetail['Detail'] as $key => $item) {
+    $MemberInformation = $Member->GetInformation('m_name', $item['member_no']);
+    if (!isset($MemberInformation[0])) unset($BonusDetail['Detail'][$key]);
+    $BonusDetail['Detail'][$key] = array_merge($item, $MemberInformation[0]);
+    print '<!-- Member' . $key . ': ' . print_r($MemberInformation, true) . ' -->';
+}
+//----------------------------------------------
+$setting = $Bonus->GetSetting();
 $threshold = $setting['threshold'];
 $angelValue = $setting['angelValue'];
 $storeFee = $setting['storeFee'];
-$Bonus = $Manager->CheckBonus($threshold);
-$BonusList = $Bonus['List'];
+$bonus = $BonusDetail['TotalBonus'];
+$BonusList = $BonusDetail['Detail'];
 
-$Count = (int)$Bonus['Count'];
-$Amount = (int)$Bonus['Amount'];
-$average = ($Count > 0) ? $Amount / $Count : 0;
-$TotalBonus = $Bonus['Bonus'];
-
-$self = $Member->GetRecord($member_id);
-$selfAmount = $self[0]['Amount'];
-$rate = ($average > 0) ? $selfAmount / $average : 0;
-$rate = $selfAmount >= $angelValue ? 1 : $rate;
-$rate = $rate >= 1 ? 1 : $rate;
-
-
-$Amount = number_format($Amount, 2);
-$average = number_format($average, 2);
-$selfAmount = number_format($selfAmount, 2);
-$rate = number_format($rate, 2);
+$Count = (int)$BonusDetail['COM'];
+$Amount = (int)$BonusDetail['TotalAmount'];
+$average = $BonusDetail['average'];
 ?>
 <!-- 網站位置導覽列 -->
 <section id="aa-catg-head-banner">
@@ -51,7 +52,7 @@ $rate = number_format($rate, 2);
 <!-- / 網站位置導覽列 -->
 <script>
     function dis_msg(txt) {
-        if (typeof(txt) === 'string') {
+        if (typeof (txt) === 'string') {
             if ($('#device').text() === 'mobile') {
                 window.javatojs.showInfoFromJs(txt);
             }
@@ -62,6 +63,32 @@ $rate = number_format($rate, 2);
     }
 </script>
 <style>
+    .Cell {
+        color: #0000FF;
+    }
+
+    .symbol {
+        color: #FF0000;
+    }
+
+    .multiplication::before {
+        content: '\00D7';
+    }
+
+    .equal::before {
+        content: '\003D';
+    }
+
+    .plus::before {
+        content: '\002B';
+    }
+    .Valid {
+        background-color: #7FFF7F !important;
+    }
+    .inValid {
+        background-color: #FF7F7F !important;
+    }
+
     /*額外做顏色，沒有什麼意義*/
     tr.tr-only-hide {
         color: #D20B2A;
@@ -147,7 +174,7 @@ $rate = number_format($rate, 2);
                     <?php
                     foreach ($BonusList as $item) {
                         ?>
-                        <tr>
+                        <tr class="<?=$item['Valid']? 'Valid':'inValid'?>">
                             <td style="text-align: center;"><?= $item['m_name'] ?></td>
                             <td style="text-align: center;"><?= $item['member_no'] ?></td>
                             <td style="text-align: center;"><?= $item['ReMonth'] ?></td>
@@ -171,7 +198,7 @@ $rate = number_format($rate, 2);
                         <th>有效平均消費</th>
                         <td data-th="有效平均消費"><?= $average ?></td>
                         <th>有效累計點數</th>
-                        <td data-th="有效累計點數"><?= $TotalBonus ?></td>
+                        <td data-th="有效累計點數"><?= $bonus ?></td>
                     </tr>
                 </table>
             </div>
@@ -189,13 +216,23 @@ $rate = number_format($rate, 2);
                         <th>成員平均消費</th>
                         <td data-th="有效平均消費"><?= $average ?></td>
                         <th>貢獻比率</th>
-                        <td data-th="貢獻比率"><?= $rate ?></td>
+                        <td data-th="貢獻比率"><?= $BonusDetail['Rate'] ?></td>
                     </tr>
                 </table>
             </div>
             <div id="conclusion" class="tab-pane fade">
                 <h3>本月獎金總結</h3>
-                <p>實得點數為有效消費總計點數 x 家長自身貢獻比率 + 店家營業額 x 店家回饋比率</p>
+                <p>
+                    <span class="Cell">實得點數</span>
+                    <span class="symbol equal"></span>
+                    <span class="Cell">有效消費總計點數</span>
+                    <span class="symbol multiplication"></span>
+                    <span class="Cell">家長自身貢獻比率</span>
+                    <span class="symbol plus"></span>
+                    <span class="Cell">店家營業額</span>
+                    <span class="symbol multiplication"></span>
+                    <span class="Cell">店家回饋比率</span>
+                </p>
                 <table class="table table-responsive table-condensed table-striped table-rwd">
                     <tr>
                         <th colspan="2">成員消費總結</th>
@@ -208,7 +245,7 @@ $rate = number_format($rate, 2);
                         <th>有效平均消費</th>
                         <td data-th="有效平均消費"><?= $average ?></td>
                         <th>有效累計點數</th>
-                        <td data-th="有效累計點數"><?= $TotalBonus ?></td>
+                        <td data-th="有效累計點數"><?= $bonus ?></td>
                     </tr>
                 </table>
                 <table class="table table-responsive table-condensed table-striped table-rwd">
@@ -219,9 +256,9 @@ $rate = number_format($rate, 2);
                         <th>家長消費總額</th>
                         <td data-th="家長消費總額"><?= $selfAmount ?></td>
                         <th>貢獻比率</th>
-                        <td data-th="貢獻比率"><?= $rate ?></td>
+                        <td data-th="貢獻比率"><?= $BonusDetail['Rate'] ?></td>
                         <th>家長實得點數</th>
-                        <td data-th="家長實得點數"><?= (int)($TotalBonus * $rate) ?></td>
+                        <td data-th="家長實得點數"><?= (int)($ValidBonus) ?></td>
                     </tr>
                 </table>
             </div>

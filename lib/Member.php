@@ -16,6 +16,7 @@ use function Base17Mai\take;
 class Member extends Base17mai
 {
     private $memberNO;
+    private $Delegate;
 
     public function __construct($memberNO = false)
     {
@@ -55,6 +56,21 @@ class Member extends Base17mai
             if (empty($chkPassword)) $result = 003;
         }
         return $result;
+    }
+
+    public function GetInformation($Columns = array(), $NOList = false)
+    {
+        if ($this->Check1DArray($Columns) === false and is_string($Columns) === false) return false;
+        if ($this->Check1DArray($NOList) === false and is_string($NOList) === false and is_numeric($NOList) === false) return false;
+        if (is_array($Columns) && count($Columns) === 0) $columns = '*';
+        if (is_array($Columns) && count($Columns) > 0) $columns = implode(', ', $Columns);
+        if (is_string($Columns)) $columns = $Columns;
+        if ($NOList === false) $NOString = '\'' . $this->memberNO . '\'';
+        if ($this->Check1DArray($NOList)) $NOString = '\'' . implode('\', \'', $NOList) . '\'';
+        if (is_string($NOList) || is_numeric($NOList)) $NOString = (string)$NOList;
+        $SQL = 'select ' . $columns . ' from member where member_no in (' . $NOString . ');';
+        $rst = $this->PDOOperator($SQL);
+        return $rst;
     }
 
     private function generateMemberNumber()
@@ -852,20 +868,20 @@ class Member extends Base17mai
         return $rst;
     }
 
-    public function GetRecord($member_no, $startDate = '', $endDate = '')
+    public function GetRecord($member_no, $RecordMonth = false)
     {
-        $now = date('Y-m') . '-00';
-        if ($startDate < $endDate) {
-            $tmp = $startDate;
-            $startDate = $endDate;
-            $endDate = $tmp;
-        }
-        $SQL = "select * from record_member where member_no = :member_no and ReMonth >= :startMonth and ReMonth <= :endMonth;";
+        $RecordMonth = $RecordMonth === false ? date('Y-m-00') : $RecordMonth;
+        $SQL = "select Amount, bonus from record_member where member_no = :member_no and ReMonth = :ReMonth;";
         $Para['member_no'] = $member_no;
-        $Para['startMonth'] = $startDate === '' ? $now : $startDate;
-        $Para['endMonth'] = $endDate === '' ? $now : $endDate;
+        $Para['ReMonth'] = $RecordMonth;
         $rst = $this->PDOOperator($SQL, $Para, Base17mai::DO_SELECT);
-        return $rst;
+        $result = array(
+            'member_no' => $member_no,
+            'ReMonth' => $RecordMonth,
+            'Amount' => isset($rst[0]) ? $rst[0]['Amount'] : 0,
+            'bonus' => isset($rst[0]) ? $rst[0]['bonus'] : 0
+        );
+        return $result;
     }
 
 }

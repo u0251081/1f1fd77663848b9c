@@ -55,7 +55,8 @@ class Base17mai
 
     }
 
-    public function testXA() {
+    public function testXA()
+    {
         $result = $this->XA
             ->select('*')
             ->table('product')
@@ -345,6 +346,16 @@ class Base17mai
         for ($i = 0; $i < (int)(strlen($String) - $len * 2); $i++) $replacement .= '*';
         $result = substr_replace($String, $replacement, (int)$start, -(int)$len);
         return $result;
+    }
+
+    protected function Check1DArray($input = array(), $AllowOBJ = false)
+    {
+        if (!is_array($input)) return false;
+        foreach ($input as $item) {
+            if (is_array($item)) return false;
+            if ($AllowOBJ === false and is_object($item)) return false;
+        }
+        return true;
     }
 
     private function breadcrumb()
