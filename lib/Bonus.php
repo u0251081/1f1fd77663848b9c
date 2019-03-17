@@ -82,7 +82,7 @@ class Bonus extends Base17mai
         $TotalAmount = $this->SumAllAmount($NOList);
         $TotalBonus = $this->SumAllBonus($NOList);
         $average = (count($NOList) === 0) ? 0 : $TotalAmount / count($NOList);
-        $Ratio = ($average === 0) ? 0 : ($Amount / $average > 1 || $Amount > $this->angelValue) ? 1 : $Amount / $average;
+        $Ratio = ($average === 0) ? 0 : (($Amount / $average > 1 || $Amount > $this->angelValue) ? 1 : $Amount / $average);
         $result = $TotalBonus * $Ratio;
         $this->BonusDetail = array(
             'TotalAmount' => $TotalAmount,

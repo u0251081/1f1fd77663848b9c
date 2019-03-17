@@ -1,11 +1,13 @@
 <?php
 
-use Base17Mai\Member, Base17Mai\Bank;
+use Base17Mai\Manager, Base17Mai\Member, Base17Mai\Bank, Base17Mai\Bonus;
 use function Base17Mai\take;
 
 $id = take('id', '', 'GET');
 if (empty($id)) exit('尚未選擇會員');
 $Member = new Member();
+$Manager = new Manager();
+$Bonus = new Bonus();
 $Bank = new Bank();
 $Profile = $Member->getMemberProfile(['id' => $id]);
 $Profile['memberID'] = $id;
@@ -17,6 +19,22 @@ $cityList = $Member->getAllCity();
 $cityOptionsHtml = $Member->generateCityOptionHtml($cityList, $Profile['city_id']);
 $areaList = $Member->getSpecifyArea($Profile['city_id']);
 $areaOptionsHtml = $Member->generateAreaOptionHtml($areaList, $Profile['area_id']);
+
+$member_no = $Member->GetMemberInformation('member_no', ['id' => $id]);
+if (!isset($member_no[0])) exit('嚴重錯誤，請回上一頁再試一次');
+else $member_no = $member_no[0]['member_no'];
+$self = $Member->GetRecord($member_no);
+$selfAmount = $self['Amount'];
+$selfBonus = $self['bonus'];
+$ManagerNO = $Manager->GetManagerInformation('manager_no', ['member_id' => $member_no]);
+if (!isset($ManagerNO[0])) $ManagerNO = '';
+else $ManagerNO = $ManagerNO[0]['manager_no'];
+if (!empty($ManagerNO)) {
+    $modifyBonus = $Bonus->SumModifyBonus($ManagerNO);
+    $CrewMember = $Manager->ListCrewMemberNO();
+    $ValidBonus = $Bonus->CalculateBonus($selfAmount, $CrewMember) + $modifyBonus;
+} else $ValidBonus = '此會員並非家長，不會有家族獎金';
+
 $id = $_GET['id'];
 $sql = "SELECT * FROM member WHERE id='$id'";
 $res = mysql_query($sql);
@@ -86,15 +104,15 @@ $row = mysql_fetch_array($res);
                            placeholder="請輸入行動電話"/></span>
             </p>
             <p>
-                <label>紅利點數</label>
+                <label>個人點數</label>
                 <span class="field">
-                    預留顯示點數，不可於此更動點數
+                    <?= $selfBonus ?> 點
                 </span>
             </p>
             <p>
-                <label>獲得分潤</label>
+                <label>家族點數</label>
                 <span class="field">
-                    預留顯示分潤，不可於此更動分潤
+                    <?= $ValidBonus ?> 點
                 </span>
             </p>
             <p>

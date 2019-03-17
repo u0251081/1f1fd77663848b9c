@@ -52,6 +52,7 @@ foreach ($Managers as $key => $manager) {
                 <input type="text" class="form-control" id="reason" name="reason" placeholder="請輸入原因">
             </div>
             <button type="submit" class="btn btn-primary">Submit</button>
+            <input type="button" class="btn btn-default span1" value="返回" onclick="location.href='home.php?url=bonus_modify'">
         </form>
     </div><!--widgetcontent-->
 </div><!--widget-->
