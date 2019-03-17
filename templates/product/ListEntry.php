@@ -21,8 +21,10 @@ $detail = 'index.php?url=product_detail&id=' . $id;
                 </h3>
                 <span class="aa-product-price">定價： NT$<?= $unitPrice ?></span>
                 <br>
-                <span class="aa-product-price">點數： <?= $bonus ?></span>
-                <br>
+                <?php if (is_manager()): ?>
+                    <span class="aa-product-price">點數： <?= $bonus ?></span>
+                    <br>
+                <?php endif; ?>
                 <p class="aa-product-descrip"><?= $description ?></p>
 
                 <?= $trackStatus ?>

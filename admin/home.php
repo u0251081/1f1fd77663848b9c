@@ -121,7 +121,7 @@ function includePage()
         }
 
         td {
-            font-size: 2.5vh;
+            font-size: 16px;
         }
 
         .alert-myNotify {

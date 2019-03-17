@@ -368,6 +368,33 @@ class Consumer extends Base17mai
         return $rst[0];
     }
 
+    public function OrderDetailByID($OrderID)
+    {
+        $SQL =
+            'select id, member_no, OrderNO, OrderTime, PayType, Total, OrderOver, OrderStatus from consumer_order as a' .
+            ' where a.id = :id;';
+        $Para['id'] = $OrderID;
+        $rst = $this->PDOOperator($SQL, $Para);
+        if (!isset($rst[0])) return false;
+        foreach ($rst as $key => $item) {
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === null ? '訂單無效' : $rst[$key]['OrderStatus'];
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === '0' ? '尚未付款' : $rst[$key]['OrderStatus'];
+            $rst[$key]['OrderStatus'] = $item['OrderStatus'] === '1' ? '完成付款' : $rst[$key]['OrderStatus'];
+            $rst[$key]['PayType'] = $item['PayType'] === 'Credit' ? '信用卡付款' : $rst[$key]['PayType'];
+            $rst[$key]['PayType'] = $item['PayType'] === 'CVS' ? '超商代碼付款' : $rst[$key]['PayType'];
+            $rst[$key]['Detail'] = $this->GetOrderItem($item['id']);
+            $rst[$key]['Recipient'] = $this->GetRecipient($item['id']);
+            if ($item['PayType'] === 'CVS') $rst[$key]['PaymentInfo'] = $this->GetPaymentInfo($item['OrderNO']);
+        }
+        return $rst[0];
+    }
+
+    public function GetOrderInformation($Columns = false, $Condition = false, $operator = 'and')
+    {
+        $rst = $this->GetInformationFromTable($Columns, $Condition, $operator, 'consumer_order');
+        return $rst;
+    }
+
     private function GetOrderItem($id)
     {
         $SQL = 'select * from consumer_order_detail where OrderID = :OrderID;';
@@ -381,6 +408,22 @@ class Consumer extends Base17mai
         $SQL = 'select * from order_address where OrderID = :OrderID;';
         $Para['OrderID'] = $OrderID;
         $rst = $this->PDOOperator($SQL, $Para);
+        if (isset($rst[0])) {
+            switch ($rst[0]['DateType']) {
+                case 1:
+                    $rst[0]['DateType'] = '週一至週五';
+                    break;
+                case 2:
+                    $rst[0]['DateType'] = '週六';
+                    break;
+                case 3:
+                    $rst[0]['DateType'] = '不指定';
+                    break;
+                default:
+                    $rst[0]['DateType'] = '沒填寫';
+                    break;
+            }
+        }
         return isset($rst[0]) ? $rst[0] : false;
     }
 

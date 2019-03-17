@@ -62,6 +62,16 @@ if ($_SESSION['device'] === 'desktop') {
     }
 }
 
+function is_member()
+{
+    return isset($_SESSION['member_no']) && !empty($_SESSION['member_no']);
+}
+
+function is_manager()
+{
+    return isset($_SESSION['manager_no']) && !empty($_SESSION['manager_no']);
+}
+
 function showMyNav()
 {
     $result = '

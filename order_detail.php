@@ -49,23 +49,7 @@ $OrderDetail = $Consumer->OrderDetail($OrderNO);
             </tr>
             <tr>
                 <td colspan="4"><h4>收件人資訊</h4></td>
-                <?php
-                $Recipient = $OrderDetail['Recipient'];
-                switch ($Recipient['DateType']) {
-                    case 1:
-                        $Recipient['DateType'] = '週一至週五';
-                        break;
-                    case 2:
-                        $Recipient['DateType'] = '週六';
-                        break;
-                    case 3:
-                        $Recipient['DateType'] = '不指定';
-                        break;
-                    default:
-                        $Recipient['DateType'] = '沒填寫';
-                        break;
-                }
-                ?>
+                <?php $Recipient = $OrderDetail['Recipient']; ?>
             </tr>
             <tr>
                 <td style="text-align: center;">收件人：</td>

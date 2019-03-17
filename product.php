@@ -50,8 +50,10 @@ $product_res = mysql_query($product_sql);
                                                     ?>
                                                     <span class="aa-product-price"><?php echo "定價： NT$" . $product_row['unitPrice']; ?></span>
                                                     <br>
-                                                    <span class="aa-product-price"><?php echo "點數： " . $product_row['bonus']; ?></span>
-                                                    <br>
+                                                    <?php if (is_manager()): ?>
+                                                        <span class="aa-product-price"><?php echo "點數： " . $product_row['bonus']; ?></span>
+                                                        <br>
+                                                    <?php endif; ?>
                                                     <p class="aa-product-descrip"><?php echo $product_row['description']; ?></p>
 
                                                     <?= $trackStatus ?>
@@ -183,15 +185,12 @@ $product_res = mysql_query($product_sql);
             {
                 if (i == 1) {
                     $("#fav_btn" + id).find("img").attr('src', 'img/icon/add.png');
-                }
-                else if (i == 0) {
+                } else if (i == 0) {
                     $("#fav_btn" + id).find("img").attr('src', 'img/icon/clean.png');
-                }
-                else {
+                } else {
                     if ($(window).width() < 767) {
                         window.javatojs.showInfoFromJs('請先登入或成為會員，才能使用此功能');
-                    }
-                    else {
+                    } else {
                         alert('請先登入或成為會員，才能使用此功能');
                     }
                 }
