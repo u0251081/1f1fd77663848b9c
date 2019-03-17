@@ -17,16 +17,16 @@ class Administrator extends Base17mai
     {
         parent::__construct();
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-        if (!isset($_SESSION['adminData'])) {
+        if (!isset($_SESSION['AdminData'])) {
             $adminData = array(
                 'ID' => '',
                 'name' => '',
                 'identity' => '',
                 'image' => ''
             );
-            $_SESSION['adminData'] = $adminData;
+            $_SESSION['AdminData'] = $adminData;
         }
-        $this->adminData = &$_SESSION['adminData'];
+        $this->adminData = &$_SESSION['AdminData'];
     }
 
     public function GetSysConfig()
@@ -85,7 +85,7 @@ class Administrator extends Base17mai
 
     private function Login($account, $password)
     {
-        $column = ['id', 'name', 'identity', 'img'];
+        $column = ['id', 'name', 'identity', 'img', 's_id'];
         $SQLcol = implode(',', $column);
         $SQL = "select {$SQLcol} from admin where account = :account and password = unhex(md5(:password));";
         $Para = ['account' => $account, 'password' => $password];
@@ -97,7 +97,7 @@ class Administrator extends Base17mai
 
     private function Logout()
     {
-        unset($_SESSION['adminData']);
+        unset($_SESSION['AdminData']);
         // old setting
         unset($_SESSION['id']);
         unset($_SESSION['name']);
@@ -111,12 +111,24 @@ class Administrator extends Base17mai
             'ID' => (isset($adminData['id'])) ? $adminData['id'] : '',
             'name' => (isset($adminData['name'])) ? $adminData['name'] : '',
             'identity' => (isset($adminData['identity'])) ? $adminData['identity'] : '',
-            'image' => (isset($adminData['img'])) ? $adminData['img'] : ''
+            'image' => (isset($adminData['img'])) ? $adminData['img'] : '',
+            'StaffID' => (isset($adminData['s_id'])) ? $adminData['s_id'] : ''
         );
         // old setting
+        $_SESSION['AdminData'] = $this->adminData;
         $_SESSION['id'] = $adminData['id'];
         $_SESSION['name'] = $adminData['name'];
         $_SESSION['identity'] = $adminData['identity'];
+    }
+
+    public static function GetAdminID()
+    {
+        return isset($_SESSION['AdminData']['ID']) ? $_SESSION['AdminData']['ID'] : '';
+    }
+
+    public static function GetAdminName()
+    {
+        return isset($_SESSION['AdminData']['name']) ? $_SESSION['AdminData']['name'] : '';
     }
 
     public function checkLogin()
@@ -175,6 +187,27 @@ class Administrator extends Base17mai
     {
         $this->Logout();
         print_r($_SESSION);
+    }
+
+    public function GetAdminInformation($Columns = false, $Condition = false, $operator = 'and')
+    {
+        $columns = $Columns === false ? '*' : '';
+        $columns = is_string($Columns) ? $Columns : $columns;
+        $columns = $this->Check1DArray($Columns) ? implode(', ', $Columns) : $columns;
+        $condition = $Condition === false ? 'true' : '';
+        $condition = is_string($Condition) ? $Condition : $condition;
+        $Para = array();
+        if ($this->Check1DArray($Condition)) {
+            $conditions = [];
+            foreach ($Condition as $key => $value) {
+                $Para[$key] = $value;
+                $conditions[] = $key;
+            }
+            $condition = count($conditions) > 0 ? implode(' ' . $operator . ' ', $conditions) : $condition;
+        }
+        $SQL = 'select ' . $columns . ' from Admin where ' . $condition . ';';
+        $rst = $this->PDOOperator($SQL, $Para);
+        return $rst;
     }
 
 }

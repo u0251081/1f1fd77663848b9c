@@ -36,8 +36,9 @@ class Member extends Base17mai
         $emailDuplicate = $this->checkEmailDuplicate($account);
         if (!empty($chkEmail) && !empty($chkPassword) && !$emailDuplicate) {
             $memberNO = $this->generateMemberNumber();
-            $SQL = 'insert into member set email = :account, password = unhex(md5(:password)), member_no = :member_no,';
-            $SQL .= ' registration_time = :createDate, identity = :identity, status = :status;';
+            $SQL =
+                'insert into member set email = :account, password = unhex(md5(:password)), member_no = :member_no,'.
+                ' registration_time = :createDate, identity = :identity, status = :status;';
             $Para = array(
                 'account' => $account,
                 'password' => $password,
@@ -70,6 +71,12 @@ class Member extends Base17mai
         if (is_string($NOList) || is_numeric($NOList)) $NOString = (string)$NOList;
         $SQL = 'select ' . $columns . ' from member where member_no in (' . $NOString . ');';
         $rst = $this->PDOOperator($SQL);
+        return $rst;
+    }
+
+    public function GetMemberInformation($Columns = false, $Condition = false, $operator = 'and')
+    {
+        $rst = $this->GetInformationFromTable($Columns,$Condition,$operator,'member');
         return $rst;
     }
 

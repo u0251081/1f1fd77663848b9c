@@ -5,6 +5,12 @@
  * Date: 8/22/18
  * Time: 9:12 PM
  */
+
+use Base17Mai\Administrator;
+
+$AdminID = Administrator::GetAdminID();
+if (!empty($AdminID)) print '<script>location.href="home.php";</script>';
+
 ?>
 <body class="loginpage">
 
@@ -30,9 +36,9 @@
     <p><h4><!--版權宣告--></h4></p>
 </div>
 <script>
-    $(document).on('submit','form',function() {
+    $(document).on('submit', 'form', function () {
         let inputValue = getFormData($(this));
-        ajax17mai('Administrator','Login',{},inputValue);
+        ajax17mai('Administrator', 'Login', {}, inputValue);
         return false;
     });
 </script>

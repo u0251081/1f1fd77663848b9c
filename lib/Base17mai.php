@@ -71,6 +71,28 @@ class Base17mai
         exit();
     }
 
+    protected function GetInformationFromTable($Columns = false, $Condition = false, $operator = 'and', $Table = false)
+    {
+        if (!is_string($Table)) return false;
+        $columns = $Columns === false ? '*' : '';
+        $columns = is_string($Columns) ? $Columns : $columns;
+        $columns = $this->Check1DArray($Columns) ? implode(', ', $Columns) : $columns;
+        $condition = $Condition === false ? 'true' : '';
+        $condition = is_string($Condition) ? $Condition : $condition;
+        $Para = array();
+        if ($this->Check1DArray($Condition)) {
+            $conditions = [];
+            foreach ($Condition as $key => $value) {
+                $Para[$key] = $value;
+                $conditions[] = $key . ' = :' . $key;
+            }
+            $condition = count($conditions) > 0 ? implode(' ' . $operator . ' ', $conditions) : $condition;
+        }
+        $SQL = 'select ' . $columns . ' from ' . $Table . ' where ' . $condition . ';';
+        $rst = $this->PDOOperator($SQL, $Para);
+        return $rst;
+    }
+
     private function switchSM(&$inputString)
     {
         $SM = '';

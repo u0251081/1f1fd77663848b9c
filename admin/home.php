@@ -83,6 +83,10 @@ function includePage()
     <script type="text/javascript" src="../assets/vendor/DataTable/datatable-1.10.18.js"></script>
 
     <script>
+        $(document).ready(function () {
+            $('.DataTable').DataTable();
+        });
+
         function showMessage(msg) {
             $.notify(msg, {
                 allow_dismiss: false,

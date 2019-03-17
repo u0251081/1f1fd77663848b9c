@@ -56,24 +56,21 @@ class Manager extends Base17mai
         return $rst;
     }
 
-    public function CheckBonus($threshold = 0)
+    public function ListManager($Columns = false)
     {
-        $SQL = 'select m_name, member_no, ReMonth,Amount,record_member.bonus from member left join record_member using(member_no) where parent_no = :member_no;';
-        $Para['member_no'] = $this->ManagerNO;
-        $rst = $this->PDOOperator($SQL, $Para);
-        foreach ($rst as $key => $value) {
-            $rst[$key]['m_name'] = $this->MaskSecret($value['m_name']);
-            $rst[$key]['ReMonth'] = substr($value['ReMonth'], 0, 7);
-            $rst[$key]['member_no'] = $this->MaskSecret($value['member_no']);
-        }
-        $result['List'] = $rst;
-        $SQL = 'select count(*) as Count, sum(Amount) as Amount, sum(record_member.bonus) as Bonus from member left join record_member using(member_no) where parent_no = :member_no and Amount >= :threshold;';
-        $Para['threshold'] = $threshold;
-        $rst = $this->PDOOperator($SQL, $Para);
-        $result['Count'] = isset($rst[0]['Count']) ? $rst[0]['Count'] : '';
-        $result['Amount'] = isset($rst[0]['Amount']) ? $rst[0]['Amount'] : '';
-        $result['Bonus'] = isset($rst[0]['Bonus']) ? $rst[0]['Bonus'] : '';
+        $columns = ($Columns === false) ? 'manager_no' : '';
+        $columns = is_array($Columns) ? implode(', ', $Columns) : $columns;
+        $columns = is_string($Columns) ? $Columns : $columns;
+        $SQL = 'select ' . $columns . ' from seller_manager';
+        $rst = $this->PDOOperator($SQL);
+        $result = $rst;
         return $result;
+    }
+
+    public function GetManagerInformation($Columns = false, $Condition = false, $operator = 'and')
+    {
+        $rst = $this->GetInformationFromTable($Columns, $Condition, $operator, 'seller_manager');
+        return $rst;
     }
 }
 

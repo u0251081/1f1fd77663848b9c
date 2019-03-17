@@ -15,8 +15,10 @@ $Bonus = new Bonus();
 
 $self = $Member->GetRecord($member_id);
 $selfAmount = $self['Amount'];
+$ManagerNO = $Manager->GetManagerNO();
+$modifyBonus = $Bonus->SumModifyBonus($ManagerNO);
 $CrewMember = $Manager->ListCrewMemberNO();
-$ValidBonus = $Bonus->CalculateBonus($selfAmount, $CrewMember);
+$ValidBonus = $Bonus->CalculateBonus($selfAmount, $CrewMember) + $modifyBonus;
 $BonusDetail = $Bonus->GetDetail();
 foreach ($BonusDetail['Detail'] as $key => $item) {
     $MemberInformation = $Member->GetInformation('m_name', $item['member_no']);
@@ -82,9 +84,11 @@ $average = $BonusDetail['average'];
     .plus::before {
         content: '\002B';
     }
+
     .Valid {
         background-color: #7FFF7F !important;
     }
+
     .inValid {
         background-color: #FF7F7F !important;
     }
@@ -174,7 +178,7 @@ $average = $BonusDetail['average'];
                     <?php
                     foreach ($BonusList as $item) {
                         ?>
-                        <tr class="<?=$item['Valid']? 'Valid':'inValid'?>">
+                        <tr class="<?= $item['Valid'] ? 'Valid' : 'inValid' ?>">
                             <td style="text-align: center;"><?= $item['m_name'] ?></td>
                             <td style="text-align: center;"><?= $item['member_no'] ?></td>
                             <td style="text-align: center;"><?= $item['ReMonth'] ?></td>
