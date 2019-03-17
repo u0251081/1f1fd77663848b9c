@@ -21,6 +21,7 @@ $CrewMember = $Manager->ListCrewMemberNO();
 $ValidBonus = $Bonus->CalculateBonus($selfAmount, $CrewMember) + $modifyBonus;
 $BonusDetail = $Bonus->GetDetail();
 foreach ($BonusDetail['Detail'] as $key => $item) {
+    $item['ReMonth'] = substr($item['ReMonth'], 0, -3);
     $MemberInformation = $Member->GetInformation('m_name', $item['member_no']);
     if (!isset($MemberInformation[0])) unset($BonusDetail['Detail'][$key]);
     $BonusDetail['Detail'][$key] = array_merge($item, $MemberInformation[0]);
@@ -33,6 +34,15 @@ $angelValue = $setting['angelValue'];
 $storeFee = $setting['storeFee'];
 $bonus = $BonusDetail['TotalBonus'];
 $BonusList = $BonusDetail['Detail'];
+$ModifyList = $Bonus->ListBonusModify($ManagerNO);
+foreach ($ModifyList as $key => $item) {
+    $ModifyList[$key] = array(
+        'id' => $item['id'],
+        'ModMonth' => substr($item['ModMonth'], 0, -3),
+        'bonus' => $item['bonus'],
+        'reason' => $item['reason']
+    );
+}
 
 $Count = (int)$BonusDetail['COM'];
 $Amount = (int)$BonusDetail['TotalAmount'];
@@ -153,6 +163,9 @@ $average = $BonusDetail['average'];
                 <a data-toggle="tab" href="#self">本月家長消費金額</a>
             </li>
             <li>
+                <a data-toggle="tab" href="#modify">特記事項</a>
+            </li>
+            <li>
                 <a data-toggle="tab" href="#conclusion">本月獎金總結</a>
             </li>
         </ul>
@@ -221,6 +234,51 @@ $average = $BonusDetail['average'];
                         <td data-th="有效平均消費"><?= $average ?></td>
                         <th>貢獻比率</th>
                         <td data-th="貢獻比率"><?= $BonusDetail['Rate'] ?></td>
+                    </tr>
+                </table>
+            </div>
+            <div id="modify" class="tab-pane fade in ">
+                <h4>特記事項</h4>
+                <p style="color: #ff0000;">若是對此處紀錄有任何疑問之處，請聯繫客服專員。</p>
+                <table class="dataTable table table-bordered table-responsive table-condensed" id="modify_bonus">
+                    <thead>
+                    <tr style="background: #DDDDDD;">
+                        <th style="text-align: center;">編號</th>
+                        <th style="text-align: center;">執行月份</th>
+                        <th style="text-align: center;">調整點數</th>
+                        <th style="text-align: center;">原因</th>
+                        <th style="text-align: center;">累計點數</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    foreach ($ModifyList as $item) {
+                        ?>
+                        <tr>
+                            <td style="text-align: center;"><?= $item['id'] ?></td>
+                            <td style="text-align: center;"><?= $item['ModMonth'] ?></td>
+                            <td style="text-align: center;"><?= $item['bonus'] ?></td>
+                            <td style="text-align: right;"><?= $item['reason'] ?></td>
+                            <td style="text-align: right;"><?= $item['bonus'] ?></td>
+                        </tr>
+                        <?php
+                    }
+                    ?>
+                    </tbody>
+                </table>
+                <table class="table table-responsive table-condensed table-rwd">
+                    <tr>
+                        <th colspan="2">總計</th>
+                    </tr>
+                    <tr>
+                        <th>有效消費人數</th>
+                        <td data-th="有效消費人數"><?= $Count ?></td>
+                        <th>有效消費總額</th>
+                        <td data-th="有效消費總額"><?= $Amount ?></td>
+                        <th>有效平均消費</th>
+                        <td data-th="有效平均消費"><?= $average ?></td>
+                        <th>有效累計點數</th>
+                        <td data-th="有效累計點數"><?= $bonus ?></td>
                     </tr>
                 </table>
             </div>
