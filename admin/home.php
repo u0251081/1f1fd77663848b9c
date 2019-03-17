@@ -83,8 +83,13 @@ function includePage()
     <script type="text/javascript" src="../assets/vendor/DataTable/datatable-1.10.18.js"></script>
 
     <script>
+        var DTable;
         $(document).ready(function () {
-            $('.DataTable').DataTable();
+            DTable = $('.DataTable').DataTable({
+                "language": {
+                    "emptyTable": "沒有記錄"
+                }
+            });
         });
 
         function showMessage(msg) {
@@ -116,6 +121,11 @@ function includePage()
         }
     </script>
     <style>
+
+        .DataTable td {
+            font-size: 16px;
+        }
+
         .dataTables_paginate {
             bottom: 0px;
         }

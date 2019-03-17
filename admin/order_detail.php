@@ -18,13 +18,19 @@ $OrderDetail['Customer'] = array(
     'email' => $Customer[0]['email']
 );
 $ParentNO = $Manager->GetManagerInformation('member_id', ['manager_no' => $Customer[0]['parent_no']]);
-if (!isset($ParentNO[0])) exit('嚴重錯誤，請回上一頁重試');
-$Parent = $Member->GetMemberInformation(['m_name', 'email'], ['member_no' => $ParentNO[0]['member_id']]);
-if (!isset($Parent[0])) exit('嚴重錯誤，請回上一頁重試');
-$OrderDetail['Parent'] = array(
-    'name' => $Parent[0]['m_name'],
-    'email' => $Parent[0]['email']
-);
+if (isset($ParentNO[0])) {
+    $Parent = $Member->GetMemberInformation(['m_name', 'email'], ['member_no' => $ParentNO[0]['member_id']]);
+    if (!isset($Parent[0])) exit('嚴重錯誤，請回上一頁重試');
+    $OrderDetail['Parent'] = array(
+        'name' => $Parent[0]['m_name'],
+        'email' => $Parent[0]['email']
+    );
+} else {
+    $OrderDetail['Parent'] = array(
+        'name' => '未加入團購家族',
+        'email' => '未加入團購家族'
+    );
+}
 /*
 @$id = $_GET['id'];
 $sql = "SELECT * FROM consumer_order AS a JOIN consumer_order2 AS b ON a.id = b.order1_id WHERE a.id='$id'";

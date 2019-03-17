@@ -1,5 +1,32 @@
+<?php
+
+use Base17Mai\Member, Base17Mai\Manager;
+
+$Member = new Member();
+$Manager = new Manager();
+$Members = $Member->GetMemberInformation(['id', 'm_name', 'email', 'cellphone', 'parent_no', 'member_no']);
+foreach ($Members as $key => $member) {
+    $ManagerNO = $Manager->GetManagerInformation('member_id', ['manager_no' => $member['parent_no']]);
+    if (isset($ManagerNO[0])) {
+        $manager = $Member->GetMemberInformation(['m_name', 'email'], ['member_no' => $ManagerNO[0]['member_id']]);
+        if (isset($ManagerName[0])) {
+            $ManagerName = $manager[0]['m_name'];
+            $ManagerEmail = $manager[0]['email'];
+        } else {
+            $ManagerName = '家長不存在';
+            $ManagerEmail = '家長不存在';
+        }
+    } else {
+        $ManagerName = '尚未加入團購家族';
+        $ManagerEmail = '尚未加入團購家族';
+    }
+    $Members[$key]['ParentName'] = $ManagerName;
+    $Members[$key]['ParentEmail'] = $ManagerEmail;
+}
+?>
+
 <!--<a href="javascript:void(0);" class="btn btn-primary" onclick="insert_btn()">新增</a>-->
-<table class="table responsive table-bordered">
+<table class="DataTable table responsive table-bordered">
     <thead>
     <tr>
         <h4 class="widgettitle" style="text-align: center;">會員列表</h4>
@@ -16,7 +43,31 @@
     </tr>
     </thead>
     <tbody>
+    <?php foreach ($Members as $member): ?>
+        <tr>
+            <td><?= $member['id'] ?></td>
+            <td><?= $member['ParentName'] ?></td>
+            <td><?= $member['email'] ?></td>
+            <td><?= $member['m_name'] ?></td>
+            <td><?= $member['cellphone'] ?></td>
+            <td>
+                <a href="javascript:void(0);" onclick="edit_fun(<?= $member['id'] ?>)" class="btn"
+                   style="color:#fff; background: green;">
+                    <i class="iconsweets-bandaid iconsweets-white"></i>修改
+                </a>
+                <a href="javascript:void(0);" onclick="check_fun(<?= $member['id'] ?>,<?= $member['member_no'] ?>);"
+                   class="btn" style="color:#fff; background: green;">
+                    <i class="iconsweets-book iconsweets-white"></i>訂單
+                </a>
+                <a href="javascript:void(0);" onclick="delete_fun(<?= $member['id'] ?>)" class="btn btn-danger"
+                   style="color:#fff;">
+                    <i class="iconsweets-trashcan iconsweets-white"></i>刪除
+                </a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
     <?php
+    /*
     $total = 10; //預設每筆頁數
     $page = 1; //預設初始頁數
 
@@ -97,42 +148,44 @@
         </tr>
         <?php
     }
+    */
     ?>
     </tbody>
+    <!--
     <table width="90%">
         <tr>
             <td align="center">
                 <br/>
                 <?php
-                if ($page == 1) {
-                    ?>
+    if ($page == 1) {
+        ?>
                     上一頁&nbsp;&nbsp;
                     <?php
-                } else {
-                    ?>
+    } else {
+        ?>
                     <a style='text-decoration:none;'
                        href="?url=member&page=<?php echo $page - 1; ?>">上一頁&nbsp;&nbsp;</a>
                 <?php } ?>
 
                 <?php
-                echo "<select onChange='location = this.options[this.selectedIndex].value;' class='span1'>";
-                for ($i = 1; $i <= $maxpage; $i++) {
-                    if ($i == $page) {
-                        echo "<option selected='selected' value=" . $i . ">" . $i . "</option>";
-                    } else {
-                        echo "<option value=home.php?url=member&page=" . $i . ">" . $i . "</option>";
-                    }
-                }
-                echo "</select>";
-                ?>
+    echo "<select onChange='location = this.options[this.selectedIndex].value;' class='span1'>";
+    for ($i = 1; $i <= $maxpage; $i++) {
+        if ($i == $page) {
+            echo "<option selected='selected' value=" . $i . ">" . $i . "</option>";
+        } else {
+            echo "<option value=home.php?url=member&page=" . $i . ">" . $i . "</option>";
+        }
+    }
+    echo "</select>";
+    ?>
 
                 <?php
-                if ($page == $maxpage) {
-                    ?>
+    if ($page == $maxpage) {
+        ?>
                     &nbsp;&nbsp;下一頁
                     <?php
-                } else {
-                    ?>
+    } else {
+        ?>
                     <a style='text-decoration:none;'
                        href="?url=member&page=<?php echo $page + 1; ?>">&nbsp;&nbsp;下一頁</a>
                 <?php } ?>
@@ -140,10 +193,15 @@
             </td>
         </tr>
     </table>
+    -->
 </table>
 
 
 <script>
+    $(document).ready(function () {
+        DTable.order([0, 'desc']).draw();
+    });
+
     function insert_btn() {
         location.href = 'home.php?url=add_member';
     }

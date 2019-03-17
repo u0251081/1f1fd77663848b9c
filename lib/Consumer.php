@@ -334,7 +334,7 @@ class Consumer extends Base17mai
     public function ListOrder()
     {
         $member_no = $this->MemberID;
-        $SQL = 'select OrderNO, OrderTime, Total, PayType, OrderStatus from consumer_order where member_no = :member_no;';
+        $SQL = 'select id, OrderNO, OrderTime, Total, PayType, OrderStatus from consumer_order where member_no = :member_no;';
         $Para['member_no'] = $member_no;
         $rst = $this->PDOOperator($SQL, $Para);
         foreach ($rst as $key => $item) {
